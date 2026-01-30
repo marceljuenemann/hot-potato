@@ -73,7 +73,7 @@ contract HotPotatoNFT is ERC721, Ownable {
     // with the call. The returned jobId can be used to fetch the signature from
     // the Internet Computer once the job is complete.
     function signHash(uint256 tokenId, bytes32 hash) external payable returns (uint256) {
-        require(ownerOf(tokenId) == msg.sender, "Not token owner");
+        require(ownerOf(tokenId) == msg.sender, "Not your potato");
         uint256 jobId = IFrostyBridge(frostyBridge).invokeFunction{value: msg.value}(
             frostyFunctionId,
             abi.encode(tokenId, hash)
