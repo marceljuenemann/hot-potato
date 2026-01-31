@@ -1,5 +1,4 @@
-// NOTE: ic-pub-key doesn't seem to bundle the d.ts files correctly.
-import { DerivationPath, PublicKeyWithChainCode } from "@dfinity/ic-pub-key/src/ecdsa/secp256k1";
+import { secp256k1 } from "@dfinity/ic-pub-key/ecdsa";
 import { Principal } from "@dfinity/principal";
 import { Potato } from "./core";
 
@@ -9,8 +8,8 @@ import { Potato } from "./core";
  * You can derive the ethereum address with ether's computeAddress.
  */
 export function publicKey(potato: Potato): string {
-  const rootKey = PublicKeyWithChainCode.forMainnetKey('key_1');
+  const rootKey = secp256k1.PublicKeyWithChainCode.forMainnetKey('key_1');
   const canisterId = Principal.fromText(potato.canisterId);
-  const path = DerivationPath.withCanisterPrefix(canisterId, potato.keyDerivationPath());
+  const path = secp256k1.DerivationPath.withCanisterPrefix(canisterId, potato.keyDerivationPath());
   return '0x' + rootKey.deriveSubkeyWithChainCode(path).toHex().public_key;
 }

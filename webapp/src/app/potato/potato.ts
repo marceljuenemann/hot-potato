@@ -12,5 +12,5 @@ export class Potato {
   tokenId = input.required<string>();
   potato = computed(() => hotPotato(this.tokenId()));
   publicKey = computed(() => publicKey(this.potato()));
-  address = computed(() => computeAddress(this.publicKey()));
+  ethAddress = computed(() => computeAddress(this.publicKey()));
 }

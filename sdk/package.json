@@ -33,7 +33,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@dfinity/ic-pub-key": "^1.0.1",
+    "@dfinity/ic-pub-key": "file:../../ic-pub-key",
     "@dfinity/principal": "^3.4.3",
     "ethers": "^6.16.0"
   }
