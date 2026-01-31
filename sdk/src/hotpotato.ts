@@ -15,6 +15,7 @@ export class HotPotato extends Potato {
   public readonly canisterId = 'n6va3-cyaaa-aaaao-qk6pq-cai';
   public readonly chainId = BigInt(42161);  // Arbitrum One
   public readonly contractAddress = '0xf349317Fc182e1d8755fBee72946616182fFeaBd';  // TODO: Update
+  public readonly signatureCost = BigInt(29e12);  // 29k gwei (still fits into number)
 
   keyDerivationPath(): Uint8Array[] {
     // The derivation path needs to match the Frosty Function, see

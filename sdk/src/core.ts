@@ -25,6 +25,11 @@ export abstract class Potato {
   abstract readonly contractAddress: string;
 
   /**
+   * The cost to request a signature in wei.
+   */
+  abstract readonly signatureCost: bigint;
+
+  /**
    * Derivation path with which the Potato's key is derived.
    */
   abstract keyDerivationPath(): Uint8Array[];

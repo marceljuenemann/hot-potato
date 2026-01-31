@@ -8,13 +8,6 @@
 
     <div class="row mb-2">
       <div class="col-3">
-        <b>Potato's Owner:</b>
-      </div>
-      <div class="col-9">
-        TODO
-      </div>
-
-      <div class="col-3">
         <b>Potato's Public Key:</b>
       </div>
       <div class="col-9">
@@ -29,6 +22,13 @@
           {{ ethAddress() }}
         </a>
       </div>
+
+      <div class="col-3">
+        <b>Potato's Owner:</b>
+      </div>
+      <div class="col-9">
+        TODO
+      </div>
     </div>
 
     <p>
@@ -39,5 +39,11 @@
   </div>
 </div>
 
-<h3 class="mt-4">Sign using the Potato</h3>
-Only the current owner of the Potato can trigger signatures.
+<h3 class="mt-4">Sign a message (EIP-191)</h3>
+<div class="alert alert-info" role="alert">
+  <b>Note:</b> You need to own the Potato to trigger signatures.
+</div>
+<div class="mt-3">
+  <textarea #messageToSign id="messageToSign" class="form-control" rows="4" placeholder="Enter a message to sign..."></textarea>
+  <button class="btn btn-primary mt-2" (click)="signPersonalMessage(messageToSign.value)">Sign it!</button>
+</div>
