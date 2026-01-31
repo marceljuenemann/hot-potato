@@ -1,17 +1,43 @@
-<h3>#{{ potato().tokenId }}</h3>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h3 class="card-title">🥔 Hot Potato #{{ potato().tokenId }}</h3>
+    <p>
+      Each Potato controls a real EOA wallet using
+      <a href="https://learn.internetcomputer.org/hc/en-us/articles/34209497587732-Chain-Key-Signatures">Chain-Key Signatures</a>.
+    </p>
 
-<div class="row">
-  <div class="col-3">
-    <b>Ethereum Address:</b>
-  </div>
-  <div class="col-9">
-    {{ ethAddress() }}
-  </div>
+    <div class="row mb-2">
+      <div class="col-3">
+        <b>Potato's Owner:</b>
+      </div>
+      <div class="col-9">
+        TODO
+      </div>
 
-  <div class="col-3">
-    <b>Public Key:</b>
-  </div>
-  <div class="col-9">
-    {{ publicKey() }}
+      <div class="col-3">
+        <b>Potato's Public Key:</b>
+      </div>
+      <div class="col-9">
+        {{ publicKey() }}
+      </div>
+
+      <div class="col-3">
+        <b>Potato's Ethereum Address:</b>
+      </div>
+      <div class="col-9">
+        <a href="https://arbitrum.blockscout.com/address/{{ ethAddress() }}" target="_blank">
+          {{ ethAddress() }}
+        </a>
+      </div>
+    </div>
+
+    <p>
+      <a href="https://opensea.io/item/arbitrum/{{ potato().contractAddress }}/{{ potato().tokenId }}" target="_blank">
+        View Potato on OpenSea
+      </a>
+    </p>
   </div>
 </div>
+
+<h3 class="mt-4">Sign using the Potato</h3>
+Only the current owner of the Potato can trigger signatures.
