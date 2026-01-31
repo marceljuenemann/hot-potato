@@ -1,3 +1,7 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { Potato } from './potato/potato';
+
+export const routes: Routes = [
+	{ path: 'hot/:tokenId', component: Potato },
+];
