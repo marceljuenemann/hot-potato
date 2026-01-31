@@ -1,5 +1,5 @@
 {
-  "name": "hot-potato-sdk",
+  "name": "potato-sdk",
   "version": "0.1.0",
   "description": "Hot Potato TypeScript SDK",
   "type": "module",
@@ -31,5 +31,10 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@dfinity/ic-pub-key": "^1.0.1",
+    "@dfinity/principal": "^3.4.3",
+    "ethers": "^6.16.0"
   }
 }

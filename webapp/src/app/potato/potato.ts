@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, computed, input } from '@angular/core';
+import { computeAddress } from 'ethers';
+import { hotPotato, publicKey } from 'potato-sdk';
 
 @Component({
   selector: 'app-potato',
@@ -8,9 +9,8 @@ import { ActivatedRoute } from '@angular/router';
   styleUrl: './potato.css',
 })
 export class Potato {
-  tokenId: string | null;
-
-  constructor(private readonly route: ActivatedRoute) {
-    this.tokenId = this.route.snapshot.paramMap.get('tokenId');
-  }
+  tokenId = input.required<string>();
+  potato = computed(() => hotPotato(this.tokenId()));
+  publicKey = computed(() => publicKey(this.potato()));
+  address = computed(() => computeAddress(this.publicKey()));
 }
