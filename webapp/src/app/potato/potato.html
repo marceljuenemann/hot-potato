@@ -2,42 +2,95 @@
   <div class="card-body">
     <h3 class="card-title">🥔 Hot Potato #{{ potato().tokenId }}</h3>
     <p>
-      Each Potato controls a real EOA wallet using
-      <a href="https://learn.internetcomputer.org/hc/en-us/articles/34209497587732-Chain-Key-Signatures">Chain-Key Signatures</a>.
+      View NFT on
+      <a href="https://arbitrum.blockscout.com/token/{{ potato().contractAddress }}/instance/{{ potato().tokenId }}" target="_blank">
+        Blockscout
+      </a> or
+      <a href="https://opensea.io/item/arbitrum/{{ potato().contractAddress }}/{{ potato().tokenId }}" target="_blank">
+        OpenSea
+      </a>
+    </p>
+    <p>
+      This NFT controls the following EOA wallet using
+      <a href="https://learn.internetcomputer.org/hc/en-us/articles/34209497587732-Chain-Key-Signatures">Chain-Key Signatures</a>:
     </p>
 
     <div class="row mb-2">
-      <div class="col-3">
-        <b>Potato's Public Key:</b>
-      </div>
-      <div class="col-9">
-        {{ publicKey() }}
-      </div>
-
-      <div class="col-3">
-        <b>Potato's Ethereum Address:</b>
-      </div>
-      <div class="col-9">
-        <a href="https://arbitrum.blockscout.com/address/{{ ethAddress() }}" target="_blank">
-          {{ ethAddress() }}
-        </a>
-      </div>
-
       <div class="col-3">
         <b>Potato's Owner:</b>
       </div>
       <div class="col-9">
         TODO
       </div>
-    </div>
 
-    <p>
-      <a href="https://opensea.io/item/arbitrum/{{ potato().contractAddress }}/{{ potato().tokenId }}" target="_blank">
-        View Potato on OpenSea
-      </a>
-    </p>
+      <div class="col-3">
+        <b>Public Key:</b>
+      </div>
+      <div class="col-9">
+        {{ publicKey() }}
+      </div>
+
+      <div class="col-3">
+        <b>Ethereum Address:</b>
+      </div>
+      <div class="col-9">
+        <a href="https://arbitrum.blockscout.com/address/{{ ethAddress() }}" target="_blank">
+          {{ ethAddress() }}
+        </a>
+      </div>
+      <div class="col-3">
+        <b>Bitcoin Address:</b>
+      </div>
+      <div class="col-9">
+        Coming soon...
+      </div>
+
+    </div>
   </div>
 </div>
+
+<h3 class="mt-4">Connect Potato to dapps</h3>
+<div class="alert alert-info" role="alert">
+  You can connect to dapps using the Potato's wallet.
+  Select WalletConnect in the dapp and paste the link below.
+  Note that only the owner of the Potato can authorize signatures.
+  If the owner is a smart contract such as a DAO, you can still
+  use this flow as long as the owner invokes the NFT's <i>signHash</i>
+  method.
+</div>
+<div class="input-group mb-3">
+  <span class="input-group-text">WalletConnect Link:</span>
+  <input #walletConnectUrl type="text" class="form-control" placeholder="wc:" aria-label="WalletConnect link">
+  <button class="btn btn-primary" type="button" (click)="connectWalletConnect(walletConnectUrl.value)">Connect</button>
+</div>
+
+
+<h3 class="mt-4">Metadata</h3>
+
+<span class="border: 1;">
+  <!--
+    Hue in HSL is 0-360
+    Saturation: 70 - 90
+    L1≈90%,
+    L2≈70%,
+    L3≈45%
+  -->
+  <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"
+    style="--h: 360; --s: 70%; --l1: 95%; --l2: 75%; --l3: 45%;">
+    <defs>
+      <radialGradient id="potatoGradient" cx="50%" cy="40%" r="70%">
+        <stop offset="0%" stop-color="hsl(var(--h) var(--s) var(--l1))"></stop>
+        <stop offset="60%" stop-color="hsl(var(--h) var(--s) var(--l2))"></stop>
+        <stop offset="100%" stop-color="hsl(var(--h) var(--s) var(--l3))"></stop>
+      </radialGradient>
+    </defs>
+    <circle cx="100" cy="100" r="100" fill="url(#potatoGradient)"></circle>
+    <text x="100" y="100" font-size="100" text-anchor="middle" dominant-baseline="middle">🥔</text>
+  </svg>
+</span>
+
+
+
 
 <h3 class="mt-4">Sign a message (EIP-191)</h3>
 <div class="alert alert-info" role="alert">
@@ -47,3 +100,4 @@
   <textarea #messageToSign id="messageToSign" class="form-control" rows="4" placeholder="Enter a message to sign..."></textarea>
   <button class="btn btn-primary mt-2" (click)="signPersonalMessage(messageToSign.value)">Sign it!</button>
 </div>
+
