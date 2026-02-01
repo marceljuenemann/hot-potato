@@ -5,7 +5,7 @@ import { hotPotato, publicKey, invokeSignHash } from 'potato-sdk';
 import { Core } from "@walletconnect/core";
 import { WalletKit } from "@reown/walletkit";
 import { environment } from '../../environments/environment';
-import { PotatoConnect } from './walletkit';
+import { PotatoConnect } from '../walletkit/walletkit';
 import { from, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 
