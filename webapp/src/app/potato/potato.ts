@@ -1,15 +1,19 @@
 import { Component, computed, input, OnInit } from '@angular/core';
-import { computeAddress, BrowserProvider, keccak256 } from 'ethers';
+import { computeAddress, BrowserProvider, getBytes, keccak256 } from 'ethers';
 import { hotPotato, publicKey, invokeSignHash } from 'potato-sdk';
 
 import { Core } from "@walletconnect/core";
 import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
 import { environment } from '../../environments/environment';
-import { buildApprovedNamespaces } from '@walletconnect/utils';
+import { PotatoConnect } from './walletkit';
+import { from, map, switchMap } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
+import { SessionTypes } from '@walletconnect/types';
+import { getSdkError } from '@walletconnect/utils';
 
 @Component({
   selector: 'app-potato',
-  imports: [],
+  imports: [AsyncPipe],
   templateUrl: './potato.html',
   styleUrls: ['./potato.css'],
 })
@@ -19,56 +23,44 @@ export class Potato implements OnInit {
   publicKey = computed(() => publicKey(this.potato()));
   ethAddress = computed(() => computeAddress(this.publicKey()));
 
-  private walletKit: IWalletKit | null = null;
-
-  async ngOnInit() {
+  potatoConnectPromise = computed(async () => {
     // TODO: Use separate storage key for each Potato.
     // TODO: Properly take care of the lifecycle of WalletKit. Unsubscribe on destroy etc.
     // TODO: Move into the sdk
     const core = new Core({
       projectId: environment.walletKit.projectId,
     });
-
-    this.walletKit = await WalletKit.init({
+    console.log(`Initializing WalletKit for Potato ${this.tokenId()}`);
+    return WalletKit.init({
       core,
       metadata: {
+        // TODO: Add potato ID
         name: "Hot Potatoes",
         description: "Hot Potatoes Wallet",
         url: "https://github.com/marceljuenemann/hot-potato",
         icons: [],
       },
-    });
+    }).then((walletKit) => new PotatoConnect(walletKit, this.potato()));
+  });
 
-    this.walletKit.on(
-      "session_proposal",
-      async (proposal: WalletKitTypes.SessionProposal) => {
-        const approvedNamespaces = buildApprovedNamespaces({
-          proposal: proposal.params,
-          supportedNamespaces: {
-            eip155: {
-              // TODO: More chains
-              chains: ['eip155:1', 'eip155:137'],
-              methods: ['eth_sendTransaction', 'personal_sign'],
-              events: [], // ['accountsChanged', 'chainChanged'],
-              accounts: [
-                // TODO: Set accounts.
-                'eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb',
-                'eip155:137:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb'
-              ]
-            }
-          }
-        })
-
-        const session = await this.walletKit!.approveSession({
-          id: proposal.id,
-          namespaces: approvedNamespaces,
-        });
-      }
+  /**
+   * Signal of an Observable of active PotatoConnectSessions.
+   */
+  sessions$ = computed(() => {
+    return from(this.potatoConnectPromise()).pipe(
+      switchMap(pc => pc.session$()),
+      map(sessions => {
+        console.log('Observable invoked', sessions);
+        return Object.values(sessions)
+      } )
     );
+  });
 
-    // TODO: Maybe wrap with rxjs and call off methods when unsubscribed
-    const sessions = await this.walletKit.getActiveSessions();
-    console.log(sessions);
+
+  private walletKit: IWalletKit | null = null;
+
+  async ngOnInit() {
+
   }
 
   async connectWalletConnect(url: string) {
@@ -80,6 +72,16 @@ export class Potato implements OnInit {
     } catch (e) {
       console.error('Error connecting WalletConnect:', e);
     }
+  }
+
+  async disconnectSession(session: SessionTypes.Struct) {
+    //if (!this.walletKit) throw new Error('WalletKit not initialized');
+    // this.walletKit.disconnectSession({ topic: session.topic });
+    const potatoConnect = await this.potatoConnectPromise();
+    potatoConnect.walletKit.disconnectSession({
+      topic: session.topic,
+      reason: getSdkError("USER_DISCONNECTED"),
+    });
   }
 
   async signPersonalMessage(msg: string) {

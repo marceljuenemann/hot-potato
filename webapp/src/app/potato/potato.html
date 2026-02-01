@@ -49,7 +49,7 @@
   </div>
 </div>
 
-<h3 class="mt-4">Connect Potato to dapps</h3>
+<h2 class="mt-4">PotatoConnect</h2>
 <div class="alert alert-info" role="alert">
   You can connect to dapps using the Potato's wallet.
   Select WalletConnect in the dapp and paste the link below.
@@ -58,11 +58,27 @@
   use this flow as long as the owner invokes the NFT's <i>signHash</i>
   method.
 </div>
+
 <div class="input-group mb-3">
   <span class="input-group-text">WalletConnect Link:</span>
   <input #walletConnectUrl type="text" class="form-control" placeholder="wc:" aria-label="WalletConnect link">
   <button class="btn btn-primary" type="button" (click)="connectWalletConnect(walletConnectUrl.value)">Connect</button>
 </div>
+
+@for (session of sessions$() | async; track session.topic) {
+  <h3 class="mt-4">
+    <img src="{{ session.peer.metadata.icons[0] }}" style="margin-left: 10px; height: 32px">
+    {{ session.peer.metadata.name }}
+    &nbsp;
+  </h3>
+  <div class="text-muted">
+    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="disconnectSession(session)">Disconnect</button>
+    {{ session.peer.metadata.url }}
+  </div>
+}
+
+
+
 
 
 <h3 class="mt-4">Metadata</h3>
