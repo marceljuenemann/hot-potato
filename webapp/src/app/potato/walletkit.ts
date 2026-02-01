@@ -1,10 +1,11 @@
-import { IWalletKit, WalletKit } from "@reown/walletkit";
-import { Potato } from "potato-sdk";
-import { environment } from "../../environments/environment.development";
-import { Core } from "@walletconnect/core";
+import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
+import { Potato, publicKey } from "potato-sdk";
+import { computeAddress } from "ethers";
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
-import { getSdkError } from "@walletconnect/utils";
+import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
+
+// TODO: Move this into the sdk
 
 export type DisconnectReason = {
   message: string;
@@ -15,17 +16,23 @@ export type DisconnectReason = {
  * WalletConnect peer that acts as the wallet of a Potato.
  */
 export class PotatoConnect {
-  private sessions;
+  private sessions: SessionMap;
+  private address: string;
 
   /**
    * @param walletKit an initialized WalletKit instance. No event listeners should be attached yet.
-   * @param potato the Potato instance to immitate
+   * @param potato the Potato instance to imitate
    */
   constructor(
     public readonly walletKit: IWalletKit,
     public readonly potato: Potato,
   ) {
+    this.address = computeAddress(publicKey(potato));
+    // TODO: Listen to session_delete
+    this.walletKit.on('session_proposal', this.onSessionProposal.bind(this));
+    this.walletKit.on('session_delete', this.onSessionDelete.bind(this));
     this.sessions = new SessionMap(walletKit);
+
   }
 
   get session$(): Observable<Array<PotatoConnectSession>> {
@@ -34,35 +41,42 @@ export class PotatoConnect {
     );
   }
 
-  /*
-    this.walletKit.on(
-      "session_proposal",
-      async (proposal: WalletKitTypes.SessionProposal) => {
-        const approvedNamespaces = buildApprovedNamespaces({
-          proposal: proposal.params,
-          supportedNamespaces: {
-            eip155: {
-              // TODO: More chains
-              chains: ['eip155:1', 'eip155:137'],
-              methods: ['eth_sendTransaction', 'personal_sign'],
-              events: [], // ['accountsChanged', 'chainChanged'],
-              accounts: [
-                // TODO: Set accounts.
-                'eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb',
-                'eip155:137:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb'
-              ]
-            }
-          }
-        })
-
-        const session = await this.walletKit!.approveSession({
-          id: proposal.id,
-          namespaces: approvedNamespaces,
-        });
-
-        // TODO: Update sessions
+  /**
+   * Handles incoming connection proposals by dapps.
+   */
+  private async onSessionProposal(proposal: WalletKitTypes.SessionProposal) {
+    const approvedNamespaces = buildApprovedNamespaces({
+      proposal: proposal.params,
+      supportedNamespaces: {
+        eip155: {
+          // TODO: More chains?
+          chains: ['eip155:1'],
+          // TODO: Some more are needed, e.g. eth_getAccounts
+          methods: ['eth_sendTransaction', 'personal_sign'],
+          events: [], // ['accountsChanged', 'chainChanged'],
+          accounts: [
+            // TODO: Do we need to add more chains?
+            `eip155:1:${this.address}`,
+          ]
+        }
       }
-    );
+    })
+
+    const session = await this.walletKit.approveSession({
+      id: proposal.id,
+      namespaces: approvedNamespaces,
+    });
+    this.sessions.add(session);
+  }
+
+  /**
+   * Called when the peer disconnects.
+   */
+  private async onSessionDelete(proposal: WalletKitTypes.SessionDelete) {
+    this.sessions.delete(proposal.topic);
+  }
+
+  /*
 
     this.walletKit.on(
       "session_request",
@@ -123,14 +137,23 @@ class SessionMap {
     }
   }
 
+  add(session: SessionTypes.Struct) {
+    this.sessions.set(session.topic, this.wrap(session));
+    this.sessions$.next(this.sessions);
+  }
+
+  delete(topic: string) {
+    this.sessions.delete(topic);
+    this.sessions$.next(this.sessions);
+  }
+
   private wrap(session: SessionTypes.Struct): PotatoConnectSession {
     return new PotatoConnectSession(session, (reason?: DisconnectReason) => {
       this.walletKit.disconnectSession({
         topic: session.topic,
         reason: reason ?? getSdkError("USER_DISCONNECTED"),
       });
-      this.sessions.delete(session.topic);
-      this.sessions$.next(this.sessions);
+      this.delete(session.topic);
     });
   }
 }

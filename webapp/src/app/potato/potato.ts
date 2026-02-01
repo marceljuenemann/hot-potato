@@ -3,13 +3,11 @@ import { computeAddress, BrowserProvider, getBytes, keccak256 } from 'ethers';
 import { hotPotato, publicKey, invokeSignHash } from 'potato-sdk';
 
 import { Core } from "@walletconnect/core";
-import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
+import { WalletKit } from "@reown/walletkit";
 import { environment } from '../../environments/environment';
 import { PotatoConnect } from './walletkit';
-import { from, map, switchMap } from 'rxjs';
+import { from, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
-import { SessionTypes } from '@walletconnect/types';
-import { getSdkError } from '@walletconnect/utils';
 
 @Component({
   selector: 'app-potato',
@@ -17,7 +15,7 @@ import { getSdkError } from '@walletconnect/utils';
   templateUrl: './potato.html',
   styleUrls: ['./potato.css'],
 })
-export class Potato implements OnInit {
+export class Potato {
   tokenId = input.required<string>();
   potato = computed(() => hotPotato(this.tokenId()));
   publicKey = computed(() => publicKey(this.potato()));
@@ -52,20 +50,12 @@ export class Potato implements OnInit {
     );
   });
 
-
-  private walletKit: IWalletKit | null = null;
-
-  async ngOnInit() {
-
-  }
-
   async connectWalletConnect(url: string) {
-    if (!this.walletKit) throw new Error('WalletKit not initialized');
-    if (!url?.trim()) return;
-
     try {
-      await this.walletKit.pair({ uri: url.trim() });
+      (await this.potatoConnectPromise()).walletKit.pair({ uri: url.trim() });
     } catch (e) {
+      // TODO: Give feedback
+      alert(e);
       console.error('Error connecting WalletConnect:', e);
     }
   }
