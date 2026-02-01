@@ -1,11 +1,9 @@
 import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
 import { Potato, publicKey } from "potato-sdk";
-import { computeAddress } from "ethers";
+import { computeAddress, getBytes } from "ethers";
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
 import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
-
-// TODO: Move this into the sdk
 
 export type DisconnectReason = {
   message: string;
@@ -28,11 +26,10 @@ export class PotatoConnect {
     public readonly potato: Potato,
   ) {
     this.address = computeAddress(publicKey(potato));
-    // TODO: Listen to session_delete
     this.walletKit.on('session_proposal', this.onSessionProposal.bind(this));
     this.walletKit.on('session_delete', this.onSessionDelete.bind(this));
+    this.walletKit.on('session_request', this.onSessionRequest.bind(this));
     this.sessions = new SessionMap(walletKit);
-
   }
 
   get session$(): Observable<Array<PotatoConnectSession>> {
@@ -76,33 +73,30 @@ export class PotatoConnect {
     this.sessions.delete(proposal.topic);
   }
 
-  /*
-
-    this.walletKit.on(
-      "session_request",
-      async (event: WalletKitTypes.SessionRequest) => {
-        const { topic, params, id } = event;
-        const { request } = params;
-        const requestParamsMessage = request.params[0];
-
-        // convert `requestParamsMessage` by using a method like hexToUtf8
-        const message = new TextDecoder().decode(getBytes(requestParamsMessage));
-
-        // sign the message
-        console.log ("Signing WalletConnect message:", message);
+  /**
+   * Handles requests from the peer, such as eth_signTransaction.
+   */
+  private async onSessionRequest(event: WalletKitTypes.SessionRequest) {
+    const request = event.params.request;
+    switch (request.method) {
+      case 'personal_sign':
+        // TODO: Support messages not encoded in UTF-8
+        const message = new TextDecoder().decode(getBytes(request.params[0]));
+        console.log("Signing WalletConnect personal_sign message:", message);
         // const signedMessage = await this.wallet.signMessage(message);
-
         // const response = { id, result: signedMessage, jsonrpc: "2.0" };
+        // await walletKit.respondSessionRequest({ topic, response });
+        break;
 
-        //await walletKit.respondSessionRequest({ topic, response });
-      }
-    );
+      case 'eth_sendTransaction':
+        console.log("Signing WalletConnect eth_sendTransaction:", request);
+        break;
 
-    // TODO: Maybe wrap with rxjs and call off methods when unsubscribed
-    const sessions = await this.walletKit.getActiveSessions();
-    console.log(sessions);
-  */
-
+      default:
+        console.warn("Unsupported WalletConnect request:", request);
+        break;
+    }
+  }
 }
 
 /**
