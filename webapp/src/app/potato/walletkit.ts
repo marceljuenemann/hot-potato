@@ -2,13 +2,20 @@ import { IWalletKit, WalletKit } from "@reown/walletkit";
 import { Potato } from "potato-sdk";
 import { environment } from "../../environments/environment.development";
 import { Core } from "@walletconnect/core";
-import { Observable, of } from "rxjs";
-import { SessionTypes } from "@walletconnect/types";
+import { BehaviorSubject, map, Observable, of } from "rxjs";
+import { SessionTypes, SignClientTypes } from "@walletconnect/types";
+import { getSdkError } from "@walletconnect/utils";
+
+export type DisconnectReason = {
+  message: string;
+  code: number;
+};
 
 /**
  * WalletConnect peer that acts as the wallet of a Potato.
  */
 export class PotatoConnect {
+  private sessions;
 
   /**
    * @param walletKit an initialized WalletKit instance. No event listeners should be attached yet.
@@ -18,13 +25,13 @@ export class PotatoConnect {
     public readonly walletKit: IWalletKit,
     public readonly potato: Potato,
   ) {
-
-
-
+    this.sessions = new SessionMap(walletKit);
   }
 
-  session$(): Observable<Record<string, SessionTypes.Struct>> {
-    return of(this.walletKit.getActiveSessions());
+  get session$(): Observable<Array<PotatoConnectSession>> {
+    return this.sessions.sessions$.pipe(
+      map(sessionMap => Array.from(sessionMap.values())),  // Defensive copy.
+    );
   }
 
   /*
@@ -82,4 +89,48 @@ export class PotatoConnect {
     console.log(sessions);
   */
 
+}
+
+/**
+ * Wrapper around WalletKit session that holds additional state about
+ * signature requests.
+ */
+export class PotatoConnectSession {
+  constructor(
+    public readonly session: SessionTypes.Struct,
+    public readonly disconnect: (reason?: DisconnectReason) => void
+  ) {}
+
+  get topic(): string {
+    return this.session.topic;
+  }
+
+  get metadata(): SignClientTypes.Metadata {
+    return this.session.peer.metadata
+  }
+}
+
+/**
+ * Keeps track of all sessions and allows to observe changes.
+ */
+class SessionMap {
+  private sessions = new Map<string, PotatoConnectSession>();
+  public readonly sessions$ = new BehaviorSubject(this.sessions);
+
+  constructor(private readonly walletKit: IWalletKit) {
+    for (const session of Object.values(this.walletKit.getActiveSessions())) {
+      this.sessions.set(session.topic, this.wrap(session));
+    }
+  }
+
+  private wrap(session: SessionTypes.Struct): PotatoConnectSession {
+    return new PotatoConnectSession(session, (reason?: DisconnectReason) => {
+      this.walletKit.disconnectSession({
+        topic: session.topic,
+        reason: reason ?? getSdkError("USER_DISCONNECTED"),
+      });
+      this.sessions.delete(session.topic);
+      this.sessions$.next(this.sessions);
+    });
+  }
 }

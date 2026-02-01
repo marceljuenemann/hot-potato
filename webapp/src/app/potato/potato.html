@@ -50,14 +50,14 @@
 </div>
 
 <h2 class="mt-4">PotatoConnect</h2>
-<div class="alert alert-info" role="alert">
+<p>
   You can connect to dapps using the Potato's wallet.
   Select WalletConnect in the dapp and paste the link below.
   Note that only the owner of the Potato can authorize signatures.
   If the owner is a smart contract such as a DAO, you can still
   use this flow as long as the owner invokes the NFT's <i>signHash</i>
   method.
-</div>
+</p>
 
 <div class="input-group mb-3">
   <span class="input-group-text">WalletConnect Link:</span>
@@ -66,14 +66,19 @@
 </div>
 
 @for (session of sessions$() | async; track session.topic) {
-  <h3 class="mt-4">
-    <img src="{{ session.peer.metadata.icons[0] }}" style="margin-left: 10px; height: 32px">
-    {{ session.peer.metadata.name }}
-    &nbsp;
-  </h3>
-  <div class="text-muted">
-    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="disconnectSession(session)">Disconnect</button>
-    {{ session.peer.metadata.url }}
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <img src="{{ session.metadata.icons[0] }}" style="height: 32px">
+          <h5 class="mb-0">{{ session.metadata.name }}</h5>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" type="button" (click)="session.disconnect()">Disconnect</button>
+      </div>
+      <div class="text-muted mt-2">
+        <a href="{{ session.metadata.url }}" target="_blank">{{ session.metadata.url }}</a>
+      </div>
+    </div>
   </div>
 }
 

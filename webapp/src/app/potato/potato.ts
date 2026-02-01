@@ -48,11 +48,7 @@ export class Potato implements OnInit {
    */
   sessions$ = computed(() => {
     return from(this.potatoConnectPromise()).pipe(
-      switchMap(pc => pc.session$()),
-      map(sessions => {
-        console.log('Observable invoked', sessions);
-        return Object.values(sessions)
-      } )
+      switchMap(potatoConnect => potatoConnect.session$),
     );
   });
 
@@ -72,16 +68,6 @@ export class Potato implements OnInit {
     } catch (e) {
       console.error('Error connecting WalletConnect:', e);
     }
-  }
-
-  async disconnectSession(session: SessionTypes.Struct) {
-    //if (!this.walletKit) throw new Error('WalletKit not initialized');
-    // this.walletKit.disconnectSession({ topic: session.topic });
-    const potatoConnect = await this.potatoConnectPromise();
-    potatoConnect.walletKit.disconnectSession({
-      topic: session.topic,
-      reason: getSdkError("USER_DISCONNECTED"),
-    });
   }
 
   async signPersonalMessage(msg: string) {
