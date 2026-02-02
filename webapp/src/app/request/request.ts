@@ -2,7 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { Authorization, fetchAuthorization } from '../../../../sdk/dist/authorization';
+import { Authorization, fetchAuthorization, fetchSignature } from 'potato-sdk';
 
 type TriState<T> = {
   progress?: string;
@@ -36,9 +36,18 @@ export class Request {
         return;
       }
       this.authorization.set({ success: authorization });
+      this.fetchSignature(authorization);
     } catch (e: any) {
       this.authorization.set({ error: String(e) });
     }
+
+  }
+
+  async fetchSignature(authorization: Authorization) {
+    const potato = this.request().potato;
+    // TODO: Remove
+    authorization = { ...authorization, signatureId: BigInt(3) };
+    const signature = await fetchSignature(potato, authorization);
 
   }
 }
