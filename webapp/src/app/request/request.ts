@@ -2,7 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { fetchAuthorization } from '../../../../sdk/dist/signing';
+import { fetchAuthorization } from '../../../../sdk/dist/authorization';
 
 type TriState<T> = {
   progress?: string;
