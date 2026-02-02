@@ -1,6 +1,6 @@
 import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
 import { Potato, publicKey } from "potato-sdk";
-import { computeAddress, getBytes } from "ethers";
+import { computeAddress, getBytes, hexlify, keccak256 } from "ethers";
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
 import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
@@ -109,6 +109,7 @@ export class PotatoConnectSession {
   public readonly requests$ = new BehaviorSubject<PotatoConnectRequest[]>([]);
 
   constructor(
+    public readonly potatoConnect: PotatoConnect,
     public readonly session: SessionTypes.Struct,
     public readonly disconnect: (reason?: DisconnectReason) => void
   ) {}
@@ -155,7 +156,7 @@ class SessionMap {
   }
 
   private wrap(session: SessionTypes.Struct): PotatoConnectSession {
-    return new PotatoConnectSession(session, (reason?: DisconnectReason) => {
+    return new PotatoConnectSession(this.potatoConnect, session, (reason?: DisconnectReason) => {
       this.potatoConnect.walletKit.disconnectSession({
         topic: session.topic,
         reason: reason ?? getSdkError("USER_DISCONNECTED"),
@@ -166,6 +167,7 @@ class SessionMap {
 }
 
 export class PotatoConnectRequest {
+  public readonly receivedAt = Date.now();
 
   constructor(
     public readonly session: PotatoConnectSession,
@@ -202,5 +204,19 @@ export class PotatoConnectRequest {
     // TODO: Support messages not encoded in UTF-8
     console.assert(this.isPersonalSign, "Not a personal_sign request");
     return new TextDecoder().decode(getBytes(this.params[0]));
+  }
+
+  hashToSign(): string {
+    // TODO: Consider creating subclasses. Doesn't work well with angular templates though.
+    if (this.isPersonalSign) {
+      const msg = this.personalSignMessage;
+      const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
+      return keccak256(new TextEncoder().encode(data));
+    }
+    throw new Error("Unsupported request method: " + this.method);
+  }
+
+  get potato() {
+    return this.session.potatoConnect.potato;
   }
 }

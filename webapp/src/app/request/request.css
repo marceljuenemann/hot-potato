@@ -1,0 +1,4 @@
+pre.word-wrap {
+  white-space: pre-wrap;
+  word-break: break-word; /* or overflow-wrap: anywhere; */
+}

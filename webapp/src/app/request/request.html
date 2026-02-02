@@ -1,20 +1,30 @@
 <div ngbAccordionItem [collapsed]="false">
   <h2 ngbAccordionHeader>
     <button ngbAccordionButton>
-      3:02pm <b>Request to sign personal message</b>
+      {{ request().receivedAt | date:'shortTime' }}
+      &nbsp;
+      <b>Request to sign personal message</b>
     </button>
   </h2>
   <div ngbAccordionCollapse>
     <div ngbAccordionBody>
       <ng-template>
-        Method: {{ request().method }}
-
         @if (request().isPersonalSign) {
-          <div>
-            Personal Sign Message:
-            <pre>{{ request().personalSignMessage }}</pre>
+          <div class="alert alert-secondary" role="alert">
+            <pre class="word-wrap">{{ request().personalSignMessage }}</pre>
           </div>
         }
+
+        In order to get a signature for this message, the owner of the Potato
+        needs to call <b>authorizeSignature</b> on the
+        <a href="https://arbitrum.blockscout.com/address/{{ request().potato.contractAddress }}">HotPotatoNFT</a>
+        contract as follows:
+        <div class="alert alert-secondary mt-2" style="padding-bottom: 0">
+          <pre>HotPotatoNFT.authorizeSignature({{ request().potato.tokenId }}, {{ request().hashToSign() }})</pre>
+        </div>
+
+
+
       </ng-template>
     </div>
   </div>
