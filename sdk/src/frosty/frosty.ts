@@ -1,5 +1,5 @@
 import { Actor, ActorMethodMappedExtended, ActorSubclass, HttpAgent } from "@dfinity/agent";
-import { _SERVICE, Chain, idlFactory, Job } from "./frosty-functions-backend.did.js";
+import { _SERVICE, Chain, Commit, idlFactory, Job } from "./frosty-functions-backend.did.js";
 
 export class FrostyFunctionsClient {
   private _actor: ActorSubclass<ActorMethodMappedExtended<_SERVICE>> | null = null;
@@ -56,14 +56,13 @@ export class FrostyFunctionsClient {
       takeWhile(job => !!(job && !('Completed' in job.status) && !("Failed" in job.status)), true)
     );
   }
+    */
 
   async getCommit(commitId: bigint): Promise<Commit> {
     const response = await ((await (await this.actor()).get_commit(commitId)).result);
     if (!response.length) {
       throw new Error(`Commit ${commitId} not found`);
     }
-    console.log("Fetched commit:", commitId, response[0]);
     return response[0];
   }
-    */
 }

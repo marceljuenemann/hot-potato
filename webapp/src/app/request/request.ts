@@ -45,9 +45,8 @@ export class Request {
 
   async fetchSignature(authorization: Authorization) {
     const potato = this.request().potato;
-    // TODO: Remove
-    authorization = { ...authorization, signatureId: BigInt(3) };
     const signature = await fetchSignature(potato, authorization);
+    console.log('Fetched signature:', signature);
 
   }
 }
