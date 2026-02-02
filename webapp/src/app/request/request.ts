@@ -2,7 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { fetchAuthorization } from '../../../../sdk/dist/authorization';
+import { Authorization, fetchAuthorization } from '../../../../sdk/dist/authorization';
 
 type TriState<T> = {
   progress?: string;
@@ -19,9 +19,7 @@ type TriState<T> = {
 export class Request {
   request = input.required<PotatoConnectRequest>();
 
-  authorization = signal<TriState<string>>({});
-
-
+  authorization = signal<TriState<Authorization>>({});
 
   /**
    * Prompts the user to enter a transaction ID for the authorization.
@@ -33,6 +31,10 @@ export class Request {
     this.authorization.set({ progress: 'Fetching authorization...' });
     try {
       const authorization = await fetchAuthorization(this.request().potato, this.request().hashToSign(), txHash);
+      if (!authorization) {
+        this.authorization.set({ error: 'No valid authorization in the transaction receipt.' });
+        return;
+      }
       this.authorization.set({ success: authorization });
     } catch (e: any) {
       this.authorization.set({ error: String(e) });

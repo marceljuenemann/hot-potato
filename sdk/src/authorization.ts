@@ -1,9 +1,18 @@
-import { Contract } from "ethers";
+import { Contract, getBigInt, Interface, Log } from "ethers";
 import { Potato } from "./core";
 import { BytesLike, Signer, TransactionResponse } from "ethers";
 
 import potatoAbi from './abi/potato.abi.json';
 import { JsonRpcProvider } from "ethers";
+
+export interface Authorization {
+  blockHash: string;
+  blockNumber: number;
+  hashToSign: string;
+  signatureId: bigint;
+  tokenId: bigint;
+  transactionHash: string;
+}
 
 /**
  * Calls the signHash function on the Potato NFT contract.
@@ -35,8 +44,35 @@ export async function invokeSignHash(potato: Potato, hash: BytesLike, signerForO
  * Fetches the signature authorization for the given Potato and hash from
  * an RPC provider using the transaction that authorized the signature.
  */
-export async function fetchAuthorization(potato: Potato, hashToSign: string, transaction: string): Promise<string> {
+export async function fetchAuthorization(potato: Potato, hashToSign: string, transaction: string): Promise<Authorization | null> {
+  const transactionHash = transaction; // TODO: Support TransactionResponse.
   const provider = new JsonRpcProvider(potato.defaultRpcProviderUrl);
   const receipt = await provider.getTransactionReceipt(transaction);
-  return 'TODO';
+  if (!receipt) return null;
+
+  const abiInterface = new Interface(potatoAbi);
+  const signHashTopic = abiInterface.getEvent("SignHash")!.topicHash;
+  const events = receipt.logs
+    .filter(log => log.address.toLowerCase() === potato.contractAddress.toLowerCase())
+    .filter(log => log.topics?.[0] === signHashTopic)
+    .map(log => abiInterface.parseLog(log))
+    .filter(event => event !== null)
+    .map(event => ({
+      tokenId: event.args.tokenId,
+      hashToSign: event.args.hash,
+      signatureId: event.args.jobId,
+    }))
+    .filter(authorization => getBigInt(authorization.tokenId) == potato.tokenId)
+    // TODO: Re-enable after testing.
+    //.filter(authorization => authorization.hashToSign.toLowerCase() === hashToSign.toLowerCase());
+  if (events.length === 0) {
+    return null;
+  }
+
+  return {
+    ...events[0],
+    blockHash: receipt.blockHash,
+    blockNumber: receipt.blockNumber,
+    transactionHash
+  }
 }

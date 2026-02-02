@@ -40,7 +40,9 @@
         } @else if (authorization().success) {
           <div class="alert alert-success mt-3">
             <b>Signature authorized:</b>
-            {{ authorization().success }}
+            Signature number {{ authorization().success!.signatureId }} in block number
+            {{ authorization().success!.blockNumber }}
+            (View <a href="https://arbitrum.blockscout.com/tx/{{ authorization().success!.transactionHash }}" target="_blank">transaction</a>)
           </div>
         }
 
