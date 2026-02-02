@@ -23,7 +23,26 @@
           <pre>HotPotatoNFT.authorizeSignature({{ request().potato.tokenId }}, {{ request().hashToSign() }})</pre>
         </div>
 
+        <button class="btn btn-primary" type="button" (click)="promptTransactionHash()">
+          Use Transaction Hash
+        </button>
 
+        @if (authorization().error) {
+          <div class="alert alert-danger mt-3">
+            <b>Authorization:</b>
+            {{ authorization().error }}
+          </div>
+        } @else if (authorization().progress) {
+          <div class="alert alert-info mt-3">
+            <b>Authorization:</b>
+            {{ authorization().progress }}
+          </div>
+        } @else if (authorization().success) {
+          <div class="alert alert-success mt-3">
+            <b>Signature authorized:</b>
+            {{ authorization().success }}
+          </div>
+        }
 
       </ng-template>
     </div>

@@ -25,6 +25,11 @@ export abstract class Potato {
   abstract readonly contractAddress: string;
 
   /**
+   * The suggested RPC provider to use.
+   */
+  abstract readonly defaultRpcProviderUrl: string;
+
+  /**
    * The cost to request a signature in wei.
    */
   abstract readonly signatureCost: bigint;
