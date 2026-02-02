@@ -2,6 +2,7 @@ import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
+import { Signature } from 'ethers';
 import { Authorization, fetchAuthorization, fetchSignature } from 'potato-sdk';
 
 type TriState<T> = {
@@ -20,6 +21,7 @@ export class Request {
   request = input.required<PotatoConnectRequest>();
 
   authorization = signal<TriState<Authorization>>({});
+  signature = signal<TriState<Signature>>({});
 
   /**
    * Prompts the user to enter a transaction ID for the authorization.
@@ -28,7 +30,7 @@ export class Request {
     const txHash = prompt('Hash of the transaction that authorized the signature:');
     if (!txHash) return;
 
-    this.authorization.set({ progress: 'Fetching authorization...' });
+    this.authorization.set({ progress: 'Fetching transaction receipt...' });
     try {
       const authorization = await fetchAuthorization(this.request().potato, this.request().hashToSign(), txHash);
       if (!authorization) {
@@ -40,13 +42,16 @@ export class Request {
     } catch (e: any) {
       this.authorization.set({ error: String(e) });
     }
-
   }
 
   async fetchSignature(authorization: Authorization) {
-    const potato = this.request().potato;
-    const signature = await fetchSignature(potato, authorization);
-    console.log('Fetched signature:', signature);
-
+    this.signature.set({ progress: 'Fetching signature from Internet Computer...' });
+    try {
+      const signature = await fetchSignature(this.request().potato, authorization);
+      this.signature.set({ success: signature });
+      this.request().respond(signature);
+    } catch (e: any) {
+      this.signature.set({ error: String(e) });
+    }
   }
 }

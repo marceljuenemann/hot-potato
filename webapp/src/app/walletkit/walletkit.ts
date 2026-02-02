@@ -1,6 +1,6 @@
 import { IWalletKit, WalletKit, WalletKitTypes } from "@reown/walletkit";
 import { Potato, publicKey } from "potato-sdk";
-import { computeAddress, getBytes, hexlify, keccak256 } from "ethers";
+import { concat, computeAddress, getBytes, Signature, keccak256 } from "ethers";
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
 import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
@@ -174,11 +174,13 @@ export class PotatoConnectRequest {
     public readonly sessionRequest: WalletKitTypes.SessionRequest,
   ) {}
 
-  // TODO: respond
-  // const signedMessage = await this.wallet.signMessage(message);
-  // const response = { id, result: signedMessage, jsonrpc: "2.0" };
-  // await walletKit.respondSessionRequest({ topic, response });
+  get potato() {
+    return this.session.potatoConnect.potato;
+  }
 
+  private get walletKit() {
+    return this.session.potatoConnect.walletKit;
+  }
 
   get chainId() {
     return this.sessionRequest.params.chainId;
@@ -216,7 +218,17 @@ export class PotatoConnectRequest {
     throw new Error("Unsupported request method: " + this.method);
   }
 
-  get potato() {
-    return this.session.potatoConnect.potato;
+  respond(signature: Signature) {
+    // TODO: Make sure we can only respond once?
+    console.assert(this.isPersonalSign, "Not a personal_sign request");
+    this.walletKit.respondSessionRequest({
+      topic: this.session.topic,
+      response: {
+        id: this.sessionRequest.id,
+        // TODO: This doesn't seem to work yet.
+        result: signature.serialized,
+        jsonrpc: "2.0"
+      }
+    });
   }
 }
