@@ -78,6 +78,12 @@
       <div class="text-muted mt-2">
         <a href="{{ session.metadata.url }}" target="_blank">{{ session.metadata.url }}</a>
       </div>
+
+      <div ngbAccordion class="mt-4" [closeOthers]="true">
+        @for (request of session.requests$ | async; track request) {
+          <potato-connect-request [request]="request"></potato-connect-request>
+        }
+      </div>
     </div>
   </div>
 }

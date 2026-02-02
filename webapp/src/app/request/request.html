@@ -1,0 +1,21 @@
+<div ngbAccordionItem [collapsed]="false">
+  <h2 ngbAccordionHeader>
+    <button ngbAccordionButton>
+      3:02pm <b>Request to sign personal message</b>
+    </button>
+  </h2>
+  <div ngbAccordionCollapse>
+    <div ngbAccordionBody>
+      <ng-template>
+        Method: {{ request().method }}
+
+        @if (request().isPersonalSign) {
+          <div>
+            Personal Sign Message:
+            <pre>{{ request().personalSignMessage }}</pre>
+          </div>
+        }
+      </ng-template>
+    </div>
+  </div>
+</div>

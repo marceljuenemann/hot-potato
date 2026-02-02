@@ -29,10 +29,10 @@ export class PotatoConnect {
     this.walletKit.on('session_proposal', this.onSessionProposal.bind(this));
     this.walletKit.on('session_delete', this.onSessionDelete.bind(this));
     this.walletKit.on('session_request', this.onSessionRequest.bind(this));
-    this.sessions = new SessionMap(walletKit);
+    this.sessions = new SessionMap(this);
   }
 
-  get session$(): Observable<Array<PotatoConnectSession>> {
+  get sessions$(): Observable<Array<PotatoConnectSession>> {
     return this.sessions.sessions$.pipe(
       map(sessionMap => Array.from(sessionMap.values())),  // Defensive copy.
     );
@@ -80,12 +80,10 @@ export class PotatoConnect {
     const request = event.params.request;
     switch (request.method) {
       case 'personal_sign':
-        // TODO: Support messages not encoded in UTF-8
-        const message = new TextDecoder().decode(getBytes(request.params[0]));
-        console.log("Signing WalletConnect personal_sign message:", message);
-        // const signedMessage = await this.wallet.signMessage(message);
-        // const response = { id, result: signedMessage, jsonrpc: "2.0" };
-        // await walletKit.respondSessionRequest({ topic, response });
+        const session = this.sessions.get(event.topic);
+        if (session) {
+          session.addRequest(new PotatoConnectRequest(session, event));
+        }
         break;
 
       case 'eth_sendTransaction':
@@ -104,6 +102,12 @@ export class PotatoConnect {
  * signature requests.
  */
 export class PotatoConnectSession {
+  /**
+   * Incoming requests from the dapp. Note that unlike sessions, requests
+   * are not persisted across page refreshes.
+   */
+  public readonly requests$ = new BehaviorSubject<PotatoConnectRequest[]>([]);
+
   constructor(
     public readonly session: SessionTypes.Struct,
     public readonly disconnect: (reason?: DisconnectReason) => void
@@ -116,6 +120,11 @@ export class PotatoConnectSession {
   get metadata(): SignClientTypes.Metadata {
     return this.session.peer.metadata
   }
+
+  addRequest(request: PotatoConnectRequest) {
+    const current = this.requests$.value;
+    this.requests$.next([...current, request]);
+  }
 }
 
 /**
@@ -125,8 +134,8 @@ class SessionMap {
   private sessions = new Map<string, PotatoConnectSession>();
   public readonly sessions$ = new BehaviorSubject(this.sessions);
 
-  constructor(private readonly walletKit: IWalletKit) {
-    for (const session of Object.values(this.walletKit.getActiveSessions())) {
+  constructor(public readonly potatoConnect: PotatoConnect) {
+    for (const session of Object.values(this.potatoConnect.walletKit.getActiveSessions())) {
       this.sessions.set(session.topic, this.wrap(session));
     }
   }
@@ -136,6 +145,10 @@ class SessionMap {
     this.sessions$.next(this.sessions);
   }
 
+  get(topic: string): PotatoConnectSession | undefined {
+    return this.sessions.get(topic);
+  }
+
   delete(topic: string) {
     this.sessions.delete(topic);
     this.sessions$.next(this.sessions);
@@ -143,11 +156,51 @@ class SessionMap {
 
   private wrap(session: SessionTypes.Struct): PotatoConnectSession {
     return new PotatoConnectSession(session, (reason?: DisconnectReason) => {
-      this.walletKit.disconnectSession({
+      this.potatoConnect.walletKit.disconnectSession({
         topic: session.topic,
         reason: reason ?? getSdkError("USER_DISCONNECTED"),
       });
       this.delete(session.topic);
     });
+  }
+}
+
+export class PotatoConnectRequest {
+
+  constructor(
+    public readonly session: PotatoConnectSession,
+    public readonly sessionRequest: WalletKitTypes.SessionRequest,
+  ) {}
+
+  // TODO: respond
+  // const signedMessage = await this.wallet.signMessage(message);
+  // const response = { id, result: signedMessage, jsonrpc: "2.0" };
+  // await walletKit.respondSessionRequest({ topic, response });
+
+
+  get chainId() {
+    return this.sessionRequest.params.chainId;
+  }
+
+  get method() {
+    return this.sessionRequest.params.request.method;
+  }
+
+  get expireTimestamp(): number | undefined {
+    return this.sessionRequest.params.request.expiryTimestamp;
+  }
+
+  get params(): any {
+    return this.sessionRequest.params.request.params;
+  }
+
+  get isPersonalSign(): boolean {
+    return this.method === 'personal_sign';
+  }
+
+  get personalSignMessage(): string {
+    // TODO: Support messages not encoded in UTF-8
+    console.assert(this.isPersonalSign, "Not a personal_sign request");
+    return new TextDecoder().decode(getBytes(this.params[0]));
   }
 }

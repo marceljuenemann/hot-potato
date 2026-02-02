@@ -8,10 +8,12 @@ import { environment } from '../../environments/environment';
 import { PotatoConnect } from '../walletkit/walletkit';
 import { from, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
+import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { Request } from '../request/request';
 
 @Component({
   selector: 'app-potato',
-  imports: [AsyncPipe],
+  imports: [AsyncPipe, NgbAccordionModule, Request],
   templateUrl: './potato.html',
   styleUrls: ['./potato.css'],
 })
@@ -46,7 +48,7 @@ export class Potato {
    */
   sessions$ = computed(() => {
     return from(this.potatoConnectPromise()).pipe(
-      switchMap(potatoConnect => potatoConnect.session$),
+      switchMap(potatoConnect => potatoConnect.sessions$),
     );
   });
 
