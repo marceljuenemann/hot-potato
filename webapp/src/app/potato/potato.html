@@ -1,28 +1,53 @@
 <div class="card shadow-sm">
   <div class="card-body">
-    <h3 class="card-title">🥔 Hot Potato #{{ potato().tokenId }}</h3>
-    <p>
-      View NFT on
-      <a href="https://arbitrum.blockscout.com/token/{{ potato().contractAddress }}/instance/{{ potato().tokenId }}" target="_blank">
-        Blockscout
-      </a> or
-      <a href="https://opensea.io/item/arbitrum/{{ potato().contractAddress }}/{{ potato().tokenId }}" target="_blank">
-        OpenSea
-      </a>
-    </p>
+    <div class="d-flex mb-3">
+      <div style="margin-right: 20px">
+        <!--
+          Hue in HSL is 0-360
+          Saturation: 70 - 90
+          L1≈90%,
+          L2≈70%,
+          L3≈45%
+        -->
+        <svg width="110" height="110" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
+          style="--h: 360; --s: 70%; --l1: 95%; --l2: 75%; --l3: 45%;">
+          <defs>
+            <radialGradient id="potatoGradient" cx="50%" cy="40%" r="70%">
+              <stop offset="0%" stop-color="hsl(var(--h) var(--s) var(--l1))"></stop>
+              <stop offset="60%" stop-color="hsl(var(--h) var(--s) var(--l2))"></stop>
+              <stop offset="100%" stop-color="hsl(var(--h) var(--s) var(--l3))"></stop>
+            </radialGradient>
+          </defs>
+          <circle cx="100" cy="100" r="100" fill="url(#potatoGradient)"></circle>
+          <text x="100" y="100" font-size="100" text-anchor="middle" dominant-baseline="middle">🥔</text>
+        </svg>
+      </div>
+      <div>
+        <h3 class="card-title">Hot Potato #{{ potato().tokenId }}</h3>
+        <div class>
+          Currently owned by
+          TODO
+        </div>
+        <div>
+          View on
+          <a href="https://arbitrum.blockscout.com/token/{{ potato().contractAddress }}/instance/{{ potato().tokenId }}" target="_blank">
+            Blockscout
+          </a>
+        </div>
+        <div>
+          View on
+          <a href="https://opensea.io/item/arbitrum/{{ potato().contractAddress }}/{{ potato().tokenId }}" target="_blank">
+            OpenSea
+          </a>
+        </div>
+      </div>
+    </div>
+
     <p>
       This NFT controls the following EOA wallet using
       <a href="https://learn.internetcomputer.org/hc/en-us/articles/34209497587732-Chain-Key-Signatures">Chain-Key Signatures</a>:
     </p>
-
     <div class="row mb-2">
-      <div class="col-3">
-        <b>Potato's Owner:</b>
-      </div>
-      <div class="col-9">
-        TODO
-      </div>
-
       <div class="col-3">
         <b>Public Key:</b>
       </div>
@@ -87,31 +112,3 @@
     </div>
   </div>
 }
-
-
-
-
-
-<h3 class="mt-4">Metadata</h3>
-
-<span class="border: 1;">
-  <!--
-    Hue in HSL is 0-360
-    Saturation: 70 - 90
-    L1≈90%,
-    L2≈70%,
-    L3≈45%
-  -->
-  <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"
-    style="--h: 360; --s: 70%; --l1: 95%; --l2: 75%; --l3: 45%;">
-    <defs>
-      <radialGradient id="potatoGradient" cx="50%" cy="40%" r="70%">
-        <stop offset="0%" stop-color="hsl(var(--h) var(--s) var(--l1))"></stop>
-        <stop offset="60%" stop-color="hsl(var(--h) var(--s) var(--l2))"></stop>
-        <stop offset="100%" stop-color="hsl(var(--h) var(--s) var(--l3))"></stop>
-      </radialGradient>
-    </defs>
-    <circle cx="100" cy="100" r="100" fill="url(#potatoGradient)"></circle>
-    <text x="100" y="100" font-size="100" text-anchor="middle" dominant-baseline="middle">🥔</text>
-  </svg>
-</span>

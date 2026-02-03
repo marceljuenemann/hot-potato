@@ -5,6 +5,11 @@ import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
 import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
 
+const SUPPORTED_METHODS = [
+  'eth_sendTransaction',
+  'personal_sign',
+];
+
 export type DisconnectReason = {
   message: string;
   code: number;
@@ -42,23 +47,28 @@ export class PotatoConnect {
    * Handles incoming connection proposals by dapps.
    */
   private async onSessionProposal(proposal: WalletKitTypes.SessionProposal) {
+    console.log("Received WalletConnect session proposal:", proposal);
+
+    // We support all eip155 chains (kind of).
+    const chains = [];
+    if (proposal.params.requiredNamespaces['eip155']?.chains) {
+      chains.push(...proposal.params.requiredNamespaces['eip155'].chains);
+    }
+    if (proposal.params.optionalNamespaces['eip155']?.chains) {
+      chains.push(...proposal.params.optionalNamespaces['eip155'].chains);
+    }
     const approvedNamespaces = buildApprovedNamespaces({
       proposal: proposal.params,
       supportedNamespaces: {
         eip155: {
-          // TODO: More chains?
-          chains: ['eip155:1'],
-          // TODO: Some more are needed, e.g. eth_getAccounts
-          methods: ['eth_sendTransaction', 'personal_sign'],
-          events: [], // ['accountsChanged', 'chainChanged'],
-          accounts: [
-            // TODO: Do we need to add more chains?
-            `eip155:1:${this.address}`,
-          ]
+          chains,
+          methods: SUPPORTED_METHODS,  // TODO: We should be supporting all requested methods.
+          events: [], // TODO: We should be supporting all requested events.
+          accounts: chains.map(chain => `${chain}:${this.address}`)
         }
       }
     })
-
+    console.log('Approving session with', approvedNamespaces);
     const session = await this.walletKit.approveSession({
       id: proposal.id,
       namespaces: approvedNamespaces,
@@ -77,22 +87,26 @@ export class PotatoConnect {
    * Handles requests from the peer, such as eth_signTransaction.
    */
   private async onSessionRequest(event: WalletKitTypes.SessionRequest) {
-    const request = event.params.request;
-    switch (request.method) {
-      case 'personal_sign':
-        const session = this.sessions.get(event.topic);
-        if (session) {
-          session.addRequest(new PotatoConnectRequest(session, event));
+    // TODO: Change back to switch
+    const method = event.params.request.method;
+    if (!SUPPORTED_METHODS.includes(method)) {
+      console.warn("Unsupported incoming WalletConnect request:", event.params.request);
+      return;
+    }
+    if (method == 'wallet_switchEthereumChain') {
+      await this.walletKit.respondSessionRequest({
+        topic: event.topic,
+        response: {
+          id: event.id,
+          jsonrpc: '2.0',
+          result: null,
         }
-        break;
-
-      case 'eth_sendTransaction':
-        console.log("Signing WalletConnect eth_sendTransaction:", request);
-        break;
-
-      default:
-        console.warn("Unsupported WalletConnect request:", request);
-        break;
+      });
+    } else {
+      const session = this.sessions.get(event.topic);
+      if (session) {
+        session.addRequest(new PotatoConnectRequest(session, event));
+      }
     }
   }
 }
@@ -202,6 +216,10 @@ export class PotatoConnectRequest {
     return this.method === 'personal_sign';
   }
 
+  get isTransaction(): boolean {
+    return this.method === 'eth_sendTransaction';
+  }
+
   get personalSignMessage(): string {
     // TODO: Support messages not encoded in UTF-8
     console.assert(this.isPersonalSign, "Not a personal_sign request");
@@ -214,6 +232,9 @@ export class PotatoConnectRequest {
       const msg = this.personalSignMessage;
       const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
       return keccak256(new TextEncoder().encode(data));
+    } else if (this.isTransaction) {
+      console.log(this.sessionRequest);
+      return keccak256(this.params[0]);
     }
     throw new Error("Unsupported request method: " + this.method);
   }
