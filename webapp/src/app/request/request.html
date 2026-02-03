@@ -13,12 +13,17 @@
           <div class="alert alert-secondary" role="alert">
             <pre class="word-wrap">{{ request().personalSignMessage }}</pre>
           </div>
+        } @else if (request().isTransaction) {
+          <div class="mb-2">
+            <transaction-form [request]="request().transactionParams"></transaction-form>
+          </div>
         }
-
-        In order to get a signature for this message, the owner of the Potato
-        needs to call <b>authorizeSignature</b> on the
-        <a href="https://arbitrum.blockscout.com/address/{{ request().potato.contractAddress }}">HotPotatoNFT</a>
-        contract as follows:
+        <p>
+          In order to get a signature for this message, the owner of the Potato
+          needs to call <b>authorizeSignature</b> on the
+          <a href="https://arbitrum.blockscout.com/address/{{ request().potato.contractAddress }}">HotPotatoNFT</a>
+          contract as follows:
+        </p>
         <div class="alert alert-secondary mt-2" style="padding-bottom: 0">
           <pre>authorizeSignature({{ request().potato.tokenId }}, {{ request().hashToSign() }})</pre>
         </div>

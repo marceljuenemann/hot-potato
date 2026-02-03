@@ -4,6 +4,7 @@ import { NgbAccordionModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstra
 import { DatePipe } from '@angular/common';
 import { Signature, BrowserProvider, TransactionResponse } from 'ethers';
 import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature } from 'potato-sdk';
+import { TransactionForm } from '../transaction-form/transaction-form';
 
 type TriState<T> = {
   progress?: string;
@@ -13,7 +14,7 @@ type TriState<T> = {
 
 @Component({
   selector: 'potato-connect-request',
-  imports: [NgbAccordionModule, NgbDropdownModule, DatePipe],
+  imports: [TransactionForm, NgbAccordionModule, NgbDropdownModule, DatePipe],
   templateUrl: './request.html',
   styleUrl: './request.css',
 })

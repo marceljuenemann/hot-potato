@@ -4,6 +4,7 @@ import { concat, computeAddress, getBytes, Signature, keccak256 } from "ethers";
 import { BehaviorSubject, map, Observable, of } from "rxjs";
 import { SessionTypes, SignClientTypes } from "@walletconnect/types";
 import { buildApprovedNamespaces, getSdkError } from "@walletconnect/utils";
+import { TransactionLike } from "ethers";
 
 const SUPPORTED_METHODS = [
   'eth_sendTransaction',
@@ -208,7 +209,7 @@ export class PotatoConnectRequest {
     return this.sessionRequest.params.request.expiryTimestamp;
   }
 
-  get params(): any {
+  get requestParams(): any {
     return this.sessionRequest.params.request.params;
   }
 
@@ -223,7 +224,14 @@ export class PotatoConnectRequest {
   get personalSignMessage(): string {
     // TODO: Support messages not encoded in UTF-8
     console.assert(this.isPersonalSign, "Not a personal_sign request");
-    return new TextDecoder().decode(getBytes(this.params[0]));
+    return new TextDecoder().decode(getBytes(this.requestParams[0]));
+  }
+
+  get transactionParams(): TransactionLike {
+    return {
+      ...this.requestParams[0],
+      chainId: this.sessionRequest.params.chainId
+    }
   }
 
   hashToSign(): string {
@@ -234,7 +242,8 @@ export class PotatoConnectRequest {
       return keccak256(new TextEncoder().encode(data));
     } else if (this.isTransaction) {
       console.log(this.sessionRequest);
-      return keccak256(this.params[0]);
+      // return keccak256(this.requestParams[0]);
+      return "TODO"
     }
     throw new Error("Unsupported request method: " + this.method);
   }

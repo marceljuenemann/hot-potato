@@ -1,0 +1,66 @@
+<form [formGroup]="form">
+	<div class="row g-3">
+		<div class="col-12">
+			<div class="form-floating">
+				<input id="txFrom" class="form-control" formControlName="from" placeholder="0x...">
+				<label for="txFrom">From</label>
+			</div>
+		</div>
+
+		<div class="col-12">
+			<div class="form-floating">
+				<input id="txTo" class="form-control" formControlName="to" placeholder="0x...">
+				<label for="txTo">To</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txValue" class="form-control" formControlName="value" placeholder="0">
+				<label for="txValue">Value in ETH</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txChainId" class="form-control" formControlName="chainId" placeholder="42161">
+				<label for="txChainId">Chain ID</label>
+			</div>
+		</div>
+
+		<div class="col-12">
+			<div class="form-floating">
+				<textarea id="txData" style="min-height: 100px" class="form-control" rows="5" formControlName="data" placeholder="0x"></textarea>
+				<label for="txData">Data</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txMaxFee" class="form-control" formControlName="maxFeePerGas" placeholder="optional">
+				<label for="txMaxFee">Max Fee Per Gas</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txMaxPriority" class="form-control" formControlName="maxPriorityFeePerGas" placeholder="optional">
+				<label for="txMaxPriority">Max Priority Fee Per Gas</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txGasLimit" class="form-control" formControlName="gasLimit" placeholder="optional">
+				<label for="txGasLimit">Gas Limit</label>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="form-floating">
+				<input id="txNonce" class="form-control" formControlName="nonce" placeholder="optional">
+				<label for="txNonce">Nonce</label>
+			</div>
+		</div>
+	</div>
+</form>
