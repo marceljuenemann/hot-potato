@@ -1,6 +1,6 @@
 import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
-import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbAccordionModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
 import { Signature, BrowserProvider, TransactionResponse } from 'ethers';
 import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature } from 'potato-sdk';
@@ -13,7 +13,7 @@ type TriState<T> = {
 
 @Component({
   selector: 'potato-connect-request',
-  imports: [NgbAccordionModule, DatePipe],
+  imports: [NgbAccordionModule, NgbDropdownModule, DatePipe],
   templateUrl: './request.html',
   styleUrl: './request.css',
 })

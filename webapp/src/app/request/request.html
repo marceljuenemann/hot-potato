@@ -23,13 +23,19 @@
           <pre>authorizeSignature({{ request().potato.tokenId }}, {{ request().hashToSign() }})</pre>
         </div>
 
-        <button class="btn btn-primary" type="button" (click)="authorizeSignature()">
-          Authorize Signature
-        </button>
-
-        <button class="btn btn-primary" type="button" (click)="promptTransactionHash()">
-          Use Transaction Hash
-        </button>
+        <div class="btn-group" ngbDropdown placement="bottom-end">
+          <button class="btn btn-primary" type="button" (click)="authorizeSignature()">
+            Authorize Signature
+          </button>
+          <button class="btn btn-primary dropdown-toggle dropdown-toggle-split" type="button" ngbDropdownToggle>
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" ngbDropdownMenu>
+            <button class="dropdown-item" type="button" (click)="promptTransactionHash()">
+              Use Transaction Hash
+            </button>
+          </div>
+        </div>
 
         @if (authorization().error) {
           <div class="alert alert-danger mt-3">
