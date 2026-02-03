@@ -241,7 +241,6 @@ export class PotatoConnectRequest {
       const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
       return keccak256(new TextEncoder().encode(data));
     } else if (this.isTransaction) {
-      console.log(this.sessionRequest);
       // return keccak256(this.requestParams[0]);
       return "TODO"
     }
