@@ -234,19 +234,6 @@ export class PotatoConnectRequest {
     }
   }
 
-  hashToSign(): string {
-    // TODO: Consider creating subclasses. Doesn't work well with angular templates though.
-    if (this.isPersonalSign) {
-      const msg = this.personalSignMessage;
-      const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
-      return keccak256(new TextEncoder().encode(data));
-    } else if (this.isTransaction) {
-      // return keccak256(this.requestParams[0]);
-      return "TODO"
-    }
-    throw new Error("Unsupported request method: " + this.method);
-  }
-
   respond(signature: Signature) {
     // TODO: Make sure we can only respond once?
     console.assert(this.isPersonalSign, "Not a personal_sign request");

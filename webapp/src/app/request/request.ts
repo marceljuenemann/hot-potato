@@ -1,10 +1,11 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { Signature, BrowserProvider, TransactionResponse } from 'ethers';
-import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature } from 'potato-sdk';
+import { Signature, BrowserProvider, TransactionResponse, TransactionLike, keccak256 } from 'ethers';
+import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature, Potato } from 'potato-sdk';
 import { TransactionForm } from '../transaction-form/transaction-form';
+import { Transaction } from 'ethers';
 
 type TriState<T> = {
   progress?: string;
@@ -20,19 +21,38 @@ type TriState<T> = {
 })
 export class Request {
   request = input.required<PotatoConnectRequest>();
+  requestedTransaction = signal<TransactionLike<string> | null>(null);
+  requestedHash = computed(() => this.hashToSign());
 
   authorization = signal<TriState<Authorization>>({});
   signature = signal<TriState<Signature>>({});
+
+  hashToSign(): string | null {
+    if (this.request().isPersonalSign) {
+      const msg = this.request().personalSignMessage;
+      const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
+      return keccak256(new TextEncoder().encode(data));
+    } else if (this.requestedTransaction()) {
+      try {
+        return Transaction.from(this.requestedTransaction()!).unsignedHash;
+      } catch (e) {
+        return String(e);  // Have fun!
+      }
+    }
+    return null;
+  }
 
   /**
    * Invokes the MetaMask to authorize the signature.
    */
   async authorizeSignature() {
+    const hash = this.requestedHash();
+    if (!hash) return;
     const potato = this.request().potato;
     const provider = await this.providerForChain(potato.chainId);
     const signer = await provider.getSigner();
-    const transaction = await authorizeSignature(potato, this.request().hashToSign(), signer);
-    this.fetchAuthorization(transaction);
+    const transaction = await authorizeSignature(potato, hash, signer);
+    this.fetchAuthorization(potato, hash, transaction);
   }
 
   /**
@@ -41,14 +61,14 @@ export class Request {
   promptTransactionHash() {
     const txHash = prompt('Hash of the transaction that authorized the signature:');
     if (txHash) {
-      this.fetchAuthorization(txHash);
+      this.fetchAuthorization(this.request().potato, this.requestedHash()!, txHash);
     }
   }
 
-  async fetchAuthorization(transaction: string | TransactionResponse) {
+  async fetchAuthorization(potato: Potato, hash: string, transaction: string | TransactionResponse) {
     this.authorization.set({ progress: 'Waiting for transaction receipt...' });
     try {
-      const authorization = await fetchAuthorization(this.request().potato, this.request().hashToSign(), transaction);
+      const authorization = await fetchAuthorization(potato, hash, transaction);
       if (!authorization) {
         this.authorization.set({ error: 'No valid authorization in the transaction receipt.' });
         return;
