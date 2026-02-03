@@ -4,6 +4,7 @@ import { FrostyFunctionsClient } from "./frosty/frosty";
 import { Chain, Commit } from "./frosty/frosty-functions-backend.did";
 import { computeAddress, recoverAddress, Signature, SigningKey } from "ethers";
 import { publicKey } from "./publickey";
+import { lastValueFrom } from "rxjs/internal/lastValueFrom";
 
 /**
  * Fetches an already authorized signature from the Internet Computer and
@@ -16,12 +17,23 @@ export async function fetchSignature(potato: Potato, authorization: Authorizatio
   // TODO: We might want to cache the FrostyClient.
   const frosty = new FrostyFunctionsClient(potato.canisterId);
   const chain: Chain = { 'Evm': { 'ArbitrumOne': null } };
-  const job = await frosty.getJob(chain, Number(authorization.signatureId));
+
+  // 1. Check whether the signing job was already created.
+  let job = await frosty.getJob(chain, Number(authorization.signatureId));
   if (!job) {
-    // TODO: Submit job.
-    throw new Error(`No job found with ID ${authorization.signatureId}`);
+    // 2. If not, submit the job.
+    if (!await frosty.indexTransaction(chain, authorization)) {
+      throw new Error("Failed to create signing job. Check authorization is valid");
+    }
   }
-  // TODO: Wait for job to complete here 
+
+  // 3. Wait for the job to complete unless it is already.
+  if (!(job && ('Completed' in job.status || 'Failed' in job.status))) {
+    job = await lastValueFrom(frosty.watchJob(chain, Number(authorization.signatureId)));
+    if (!job) {
+      throw new Error("No signing job even though we submitted it. This should not happen.");
+    }
+  }
   if ('Failed' in job.status) {
     throw new Error(`Signing job failed with: ${job.status['Failed']}`);
   }
@@ -29,6 +41,7 @@ export async function fetchSignature(potato: Potato, authorization: Authorizatio
     throw new Error(`Signing job logs do not match expected format.`);
   }
 
+  // 4. Parse the signature from the job logs.
   const commit: Commit = await frosty.getCommit(job.commit_ids[1]);
   const signature = commit.logs
     .filter(log => 'Default' in log.level)
@@ -38,6 +51,7 @@ export async function fetchSignature(potato: Potato, authorization: Authorizatio
     throw new Error(`Signature not found in signing job logs.`);
   }
 
+  // 5. Verify the signature matches the hash and public key.
   return verifySignature(potato, authorization.hashToSign, signature[0], signature[1]);
 }
 

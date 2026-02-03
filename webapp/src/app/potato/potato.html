@@ -61,7 +61,7 @@
 
 <div class="input-group mb-3">
   <span class="input-group-text">WalletConnect Link:</span>
-  <input #walletConnectUrl type="text" class="form-control" placeholder="wc:" aria-label="WalletConnect link">
+  <input #walletConnectUrl type="text" class="form-control" placeholder="wc:" aria-label="WalletConnect link" (keydown.enter)="connectWalletConnect(walletConnectUrl.value)">
   <button class="btn btn-primary" type="button" (click)="connectWalletConnect(walletConnectUrl.value)">Connect</button>
 </div>
 
