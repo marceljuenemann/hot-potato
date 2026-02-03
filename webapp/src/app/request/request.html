@@ -23,6 +23,10 @@
           <pre>authorizeSignature({{ request().potato.tokenId }}, {{ request().hashToSign() }})</pre>
         </div>
 
+        <button class="btn btn-primary" type="button" (click)="authorizeSignature()">
+          Authorize Signature
+        </button>
+
         <button class="btn btn-primary" type="button" (click)="promptTransactionHash()">
           Use Transaction Hash
         </button>

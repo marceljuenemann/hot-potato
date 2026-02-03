@@ -2,8 +2,8 @@ import { Component, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { Signature } from 'ethers';
-import { Authorization, fetchAuthorization, fetchSignature } from 'potato-sdk';
+import { Signature, BrowserProvider, TransactionResponse } from 'ethers';
+import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature } from 'potato-sdk';
 
 type TriState<T> = {
   progress?: string;
@@ -24,15 +24,30 @@ export class Request {
   signature = signal<TriState<Signature>>({});
 
   /**
-   * Prompts the user to enter a transaction ID for the authorization.
+   * Invokes the MetaMask to authorize the signature.
    */
-  async promptTransactionHash() {
-    const txHash = prompt('Hash of the transaction that authorized the signature:');
-    if (!txHash) return;
+  async authorizeSignature() {
+    const potato = this.request().potato;
+    const provider = await this.providerForChain(potato.chainId);
+    const signer = await provider.getSigner();
+    const transaction = await authorizeSignature(potato, this.request().hashToSign(), signer);
+    this.fetchAuthorization(transaction);
+  }
 
-    this.authorization.set({ progress: 'Fetching transaction receipt...' });
+  /**
+   * Prompts the user to manually enter a transaction hash for the authorization.
+   */
+  promptTransactionHash() {
+    const txHash = prompt('Hash of the transaction that authorized the signature:');
+    if (txHash) {
+      this.fetchAuthorization(txHash);
+    }
+  }
+
+  async fetchAuthorization(transaction: string | TransactionResponse) {
+    this.authorization.set({ progress: 'Waiting for transaction receipt...' });
     try {
-      const authorization = await fetchAuthorization(this.request().potato, this.request().hashToSign(), txHash);
+      const authorization = await fetchAuthorization(this.request().potato, this.request().hashToSign(), transaction);
       if (!authorization) {
         this.authorization.set({ error: 'No valid authorization in the transaction receipt.' });
         return;
@@ -53,5 +68,23 @@ export class Request {
     } catch (e: any) {
       this.signature.set({ error: String(e) });
     }
+  }
+
+  /**
+   * Simple MetaMask provider.
+   *
+   * TODO: Support other wallets.
+   */
+  async providerForChain(chainId: bigint): Promise<BrowserProvider> {
+    if ((window as any).ethereum == null) throw new Error("MetaMask not installed");
+    const provider = new BrowserProvider((window as any).ethereum);
+    await provider.send('wallet_switchEthereumChain', [{
+      chainId: '0x' + chainId.toString(16)
+    }]);
+    const network = await provider.getNetwork();
+    if (network.chainId !== chainId) {
+      throw new Error(`Connected to wrong network: ${network.chainId}, expected ${chainId}`);
+    }
+    return provider;
   }
 }

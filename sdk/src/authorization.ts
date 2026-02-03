@@ -4,6 +4,7 @@ import { BytesLike, Signer, TransactionResponse } from "ethers";
 
 import potatoAbi from './abi/potato.abi.json';
 import { JsonRpcProvider } from "ethers";
+import { TransactionReceipt } from "ethers";
 
 export interface Authorization {
   blockHash: string;
@@ -22,8 +23,7 @@ export interface Authorization {
  * @param signerForOwner the signer connected to the wallet owning the potato
  * @returns the transaction
  */
-// TODO: rename to authorizeSignature
-export async function invokeSignHash(potato: Potato, hash: BytesLike, signerForOwner: Signer): Promise<TransactionResponse> {
+export async function authorizeSignature(potato: Potato, hash: BytesLike, signerForOwner: Signer): Promise<TransactionResponse> {
   const contract = new Contract(
     potato.contractAddress,
     potatoAbi,
@@ -44,17 +44,15 @@ export async function invokeSignHash(potato: Potato, hash: BytesLike, signerForO
  * Fetches the signature authorization for the given Potato and hash from
  * an RPC provider using the transaction that authorized the signature.
  */
-export async function fetchAuthorization(potato: Potato, hashToSign: string, transaction: string): Promise<Authorization | null> {
-  const transactionHash = transaction; // TODO: Support TransactionResponse.
-  const provider = new JsonRpcProvider(potato.defaultRpcProviderUrl);
-  const receipt = await provider.getTransactionReceipt(transaction);
+export async function fetchAuthorization(potato: Potato, hashToSign: string, transaction: string | TransactionResponse): Promise<Authorization | null> {
+  const { receipt, transactionHash } = await fetchTransactionReceipt(potato, transaction);
   if (!receipt) return null;
 
   const abiInterface = new Interface(potatoAbi);
-  const signHashTopic = abiInterface.getEvent("SignHash")!.topicHash;
+  const topic = abiInterface.getEvent("SignHash")!.topicHash;
   const events = receipt.logs
     .filter(log => log.address.toLowerCase() === potato.contractAddress.toLowerCase())
-    .filter(log => log.topics?.[0] === signHashTopic)
+    .filter(log => log.topics?.[0] === topic)
     .map(log => abiInterface.parseLog(log))
     .filter(event => event !== null)
     .map(event => ({
@@ -63,8 +61,7 @@ export async function fetchAuthorization(potato: Potato, hashToSign: string, tra
       signatureId: event.args.jobId,
     }))
     .filter(authorization => getBigInt(authorization.tokenId) == potato.tokenId)
-    // TODO: Re-enable after testing.
-    //.filter(authorization => authorization.hashToSign.toLowerCase() === hashToSign.toLowerCase());
+    .filter(authorization => authorization.hashToSign.toLowerCase() === hashToSign.toLowerCase());
   if (events.length === 0) {
     return null;
   }
@@ -73,6 +70,15 @@ export async function fetchAuthorization(potato: Potato, hashToSign: string, tra
     ...events[0],
     blockHash: receipt.blockHash,
     blockNumber: receipt.blockNumber,
-    transactionHash
+    transactionHash: transactionHash
+  }
+}
+
+async function fetchTransactionReceipt(potato: Potato, transaction: string | TransactionResponse): Promise<{receipt: TransactionReceipt | null, transactionHash: string}> {
+  if (typeof transaction === 'string') {
+    const provider = new JsonRpcProvider(potato.defaultRpcProviderUrl);
+    return { receipt: await provider.getTransactionReceipt(transaction), transactionHash: transaction };
+  } else {
+    return { receipt: await transaction.wait(), transactionHash: transaction.hash };
   }
 }
