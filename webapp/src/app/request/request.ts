@@ -2,10 +2,11 @@ import { Component, computed, input, signal } from '@angular/core';
 import { PotatoConnectRequest } from '../walletkit/walletkit';
 import { NgbAccordionModule, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
-import { Signature, BrowserProvider, TransactionResponse, TransactionLike, keccak256 } from 'ethers';
-import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature, Potato } from 'potato-sdk';
+import { Signature, BrowserProvider, TransactionResponse, TransactionLike, keccak256, computeAddress } from 'ethers';
+import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature, Potato, publicKey } from 'potato-sdk';
 import { TransactionForm } from '../transaction-form/transaction-form';
 import { Transaction } from 'ethers';
+import { AlchemyProvider } from 'ethers';
 
 type TriState<T> = {
   progress?: string;
@@ -21,11 +22,12 @@ type TriState<T> = {
 })
 export class Request {
   request = input.required<PotatoConnectRequest>();
-  requestedTransaction = signal<TransactionLike<string> | null>(null);
+  requestedTransaction = signal<Transaction | null>(null);
   requestedHash = computed(() => this.hashToSign());
 
   authorization = signal<TriState<Authorization>>({});
   signature = signal<TriState<Signature>>({});
+  broadcast = signal<TriState<string>>({});
 
   hashToSign(): string | null {
     if (this.request().isPersonalSign) {
@@ -33,11 +35,7 @@ export class Request {
       const data = "\x19Ethereum Signed Message:\n" + msg.length + msg;
       return keccak256(new TextEncoder().encode(data));
     } else if (this.requestedTransaction()) {
-      try {
-        return Transaction.from(this.requestedTransaction()!).unsignedHash;
-      } catch (e) {
-        return String(e);  // Have fun!
-      }
+      return this.requestedTransaction()!.unsignedHash;
     }
     return null;
   }
@@ -81,13 +79,35 @@ export class Request {
   }
 
   async fetchSignature(authorization: Authorization) {
-    this.signature.set({ progress: 'Fetching signature from Internet Computer...' });
+    this.signature.set({ progress: 'Creating signature on Internet Computer...' });
     try {
       const signature = await fetchSignature(this.request().potato, authorization);
       this.signature.set({ success: signature });
-      this.request().respond(signature);
+      if (this.request().isPersonalSign) {
+        this.request().respond(signature.serialized);
+      } else {
+        this.broadcastTransaction(signature);
+      }
     } catch (e: any) {
       this.signature.set({ error: String(e) });
+    }
+  }
+
+  async broadcastTransaction(signature: Signature) {
+    // TODO: User might change the transaction in the meantime. Bad user!
+    this.broadcast.set({ progress: 'Broadcasting transaction...' });
+    try {
+      const transaction = this.requestedTransaction()!;
+      //transaction.from = computeAddress(publicKey(this.request().potato));
+      transaction.signature = signature;
+      console.log("Broadcasting transaction:", transaction);
+
+      const provider = new AlchemyProvider(transaction.chainId);
+      const response = await provider.broadcastTransaction(transaction.serialized);
+      this.request().respond(response.hash);
+      this.broadcast.set({ success: response.hash });
+    } catch (e) {
+      this.broadcast.set({ error: String(e) })
     }
   }
 

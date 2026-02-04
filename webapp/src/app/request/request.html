@@ -3,7 +3,11 @@
     <button ngbAccordionButton>
       {{ request().receivedAt | date:'shortTime' }}
       &nbsp;
-      <b>Request to sign personal message</b>
+      @if (request().isPersonalSign) {
+        <b>Request to sign personal message</b>
+      } @else if (request().isTransaction) {
+        <b>Request to sign transaction</b>
+      }
     </button>
   </h2>
   <div ngbAccordionCollapse>
@@ -28,11 +32,11 @@
           contract as follows:
         </p>
         <div class="alert alert-secondary mt-2" style="padding-bottom: 0">
-          <pre>authorizeSignature({{ request().potato.tokenId }}, {{ requestedHash() }})</pre>
+          <pre>authorizeSignature({{ request().potato.tokenId }}, {{ requestedHash() || "(Invalid transaction)" }})</pre>
         </div>
 
         <div class="btn-group" ngbDropdown placement="bottom-end">
-          <button class="btn btn-primary" type="button" (click)="authorizeSignature()">
+          <button [disabled]="!requestedHash()" class="btn btn-primary" type="button" (click)="authorizeSignature()">
             Authorize Signature
           </button>
           <button class="btn btn-primary dropdown-toggle dropdown-toggle-split" type="button" ngbDropdownToggle>
@@ -65,19 +69,36 @@
 
           @if (signature().error) {
             <div class="alert alert-danger mt-3">
-              <b>Signature:</b>
+              <b>Signing:</b>
               {{ signature().error }}
             </div>
           } @else if (signature().progress) {
             <div class="alert alert-info mt-3">
-              <b>Signature:</b>
+              <b>Signing:</b>
               {{ signature().progress }}
             </div>
           } @else if (signature().success) {
             <div class="alert alert-success mt-3">
-              <b>Signature verified:</b>
+              <b>Signature fetched and verified:</b>
               {{ signature().success!.serialized }}
             </div>
+
+            @if (broadcast().error) {
+              <div class="alert alert-danger mt-3">
+                <b>Broadcasting transaction:</b>
+                {{ broadcast().error }}
+              </div>
+            } @else if (broadcast().progress) {
+              <div class="alert alert-info mt-3">
+                <b>Broadcasting transaction:</b>
+                {{ broadcast().progress }}
+              </div>
+            } @else if (broadcast().success) {
+              <div class="alert alert-success mt-3">
+                <b>Transaction broadcasted successfully!</b>
+                TxHash: {{ broadcast().success }}
+              </div>
+            }
           }
         }
       </ng-template>

@@ -1,8 +1,9 @@
 import { Component, DestroyRef, inject, input, OnInit, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { formatEther, TransactionLike } from 'ethers';
+import { formatEther, parseEther, TransactionLike } from 'ethers';
 import { AlchemyProvider } from 'ethers';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Transaction } from 'ethers';
 
 @Component({
   selector: 'transaction-form',
@@ -12,19 +13,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class TransactionForm implements OnInit {
   request = input.required<TransactionLike<string>>();
-  transaction = output<TransactionLike<string> | null>();
+  transaction = output<Transaction | null>();
   form;
 
   constructor(private readonly fb: FormBuilder) {
     this.form = this.fb.group({
-      from: [{ value: '', disabled: true }, [Validators.required]],
       to: [{ value: '', disabled: true }, [Validators.required]],
-      value: [{ value: '', disabled: true }],
-      data: [{ value: '0x', disabled: true }],
-      nonce: [''],
-      gasLimit: [''],
-      maxFeePerGas: [''],
-      maxPriorityFeePerGas: [''],
+      value: [{ value: '', disabled: true }, [Validators.required]],
+      data: [{ value: '0x', disabled: true }, [Validators.required]],
+      nonce: ['', [Validators.required]],
+      gasLimit: ['', [Validators.required]],
+      maxFeePerGas: ['', [Validators.required]],
+      maxPriorityFeePerGas: ['', [Validators.required]],
       chainId: [{ value: '', disabled: true }, [Validators.required]],
     });
 
@@ -33,7 +33,11 @@ export class TransactionForm implements OnInit {
         if (!this.form.valid) {
           this.transaction.emit(null);
         } else {
-          this.transaction.emit(this.form.value as TransactionLike<string>);
+          const params = {
+            ...this.form.getRawValue(),
+            value: parseEther(this.form.controls.value.value!),
+          } as TransactionLike
+          this.transaction.emit(Transaction.from(params));
         }
       });
   }
@@ -65,7 +69,6 @@ export class TransactionForm implements OnInit {
     }
     if (!tx.maxFeePerGas || !tx.maxPriorityFeePerGas) {
       provider.getFeeData().then(feeData => {
-        console.log("Fee data:", feeData);
         this.form.patchValue({ maxFeePerGas: String(feeData.maxFeePerGas) });
         this.form.patchValue({ maxPriorityFeePerGas: String(feeData.maxPriorityFeePerGas) });
       })

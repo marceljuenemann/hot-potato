@@ -234,15 +234,14 @@ export class PotatoConnectRequest {
     }
   }
 
-  respond(signature: Signature) {
+  respond(result: any) {
     // TODO: Make sure we can only respond once?
     console.assert(this.isPersonalSign, "Not a personal_sign request");
     this.walletKit.respondSessionRequest({
       topic: this.session.topic,
       response: {
         id: this.sessionRequest.id,
-        // TODO: This doesn't seem to work yet.
-        result: signature.serialized,
+        result,
         jsonrpc: "2.0"
       }
     });
