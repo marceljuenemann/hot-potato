@@ -1,6 +1,6 @@
 import { Component, computed, input, OnInit } from '@angular/core';
 import { computeAddress } from 'ethers';
-import { hotPotato, publicKey } from 'potato-sdk';
+import { getOwner, hotPotato, publicKey } from 'potato-sdk';
 
 import { Core } from "@walletconnect/core";
 import { WalletKit } from "@reown/walletkit";
@@ -22,6 +22,7 @@ export class Potato {
   potato = computed(() => hotPotato(this.tokenId()));
   publicKey = computed(() => publicKey(this.potato()));
   ethAddress = computed(() => computeAddress(this.publicKey()));
+  ownerAsync = computed(() => getOwner(this.potato()));
 
   potatoConnectPromise = computed(async () => {
     // TODO: Use separate storage key for each Potato.

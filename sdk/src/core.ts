@@ -1,3 +1,5 @@
+import { Contract, getDefaultProvider, Provider } from "ethers";
+import POTATO_ABI from "./abi/potato.abi.json";
 
 /**
  * Potatoes are cheap and nutritious. They provide all the configuration
@@ -38,4 +40,10 @@ export abstract class Potato {
    * Derivation path with which the Potato's key is derived.
    */
   abstract keyDerivationPath(): Uint8Array[];
+}
+
+export async function getOwner(potato: Potato, provider?: Provider): Promise<string> {
+  const rpcProvider = provider ?? getDefaultProvider(potato.defaultRpcProviderUrl);
+  const contract = new Contract(potato.contractAddress, POTATO_ABI, rpcProvider);
+  return contract['ownerOf'](potato.tokenId);
 }
