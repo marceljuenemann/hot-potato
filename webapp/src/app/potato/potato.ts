@@ -10,10 +10,11 @@ import { from, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { Request } from '../request/request';
+import { PotatoIcon } from '../potato-icon/potato-icon';
 
 @Component({
   selector: 'app-potato',
-  imports: [AsyncPipe, NgbAccordionModule, Request],
+  imports: [PotatoIcon, AsyncPipe, NgbAccordionModule, Request],
   templateUrl: './potato.html',
   styleUrls: ['./potato.css'],
 })

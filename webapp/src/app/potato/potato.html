@@ -1,26 +1,8 @@
 <div class="card shadow-sm">
   <div class="card-body">
     <div class="d-flex mb-3">
-      <div style="margin-right: 20px">
-        <!--
-          Hue in HSL is 0-360
-          Saturation: 70 - 90
-          L1≈90%,
-          L2≈70%,
-          L3≈45%
-        -->
-        <svg width="110" height="110" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
-          style="--h: 360; --s: 70%; --l1: 95%; --l2: 75%; --l3: 45%;">
-          <defs>
-            <radialGradient id="potatoGradient" cx="50%" cy="40%" r="70%">
-              <stop offset="0%" stop-color="hsl(var(--h) var(--s) var(--l1))"></stop>
-              <stop offset="60%" stop-color="hsl(var(--h) var(--s) var(--l2))"></stop>
-              <stop offset="100%" stop-color="hsl(var(--h) var(--s) var(--l3))"></stop>
-            </radialGradient>
-          </defs>
-          <circle cx="100" cy="100" r="100" fill="url(#potatoGradient)"></circle>
-          <text x="100" y="100" font-size="100" text-anchor="middle" dominant-baseline="middle">🥔</text>
-        </svg>
+      <div style="margin-right: 20px; width: 100px">
+        <potato-icon></potato-icon>
       </div>
       <div>
         <h3 class="card-title">Hot Potato #{{ potato().tokenId }}</h3>
