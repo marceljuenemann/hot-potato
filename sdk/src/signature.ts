@@ -1,7 +1,7 @@
 import { Authorization } from "./authorization";
 import { Potato } from "./core";
-import { FrostyFunctionsClient } from "./frosty/frosty";
-import { Chain, Commit } from "./frosty/frosty-functions-backend.did";
+import { FrostyFunctionsClient } from "./frosty/frosty.js";
+import { Chain, Commit } from "./frosty/frosty-functions-backend.did.js";
 import { computeAddress, recoverAddress, Signature, SigningKey } from "ethers";
 import { publicKey } from "./publickey";
 import { lastValueFrom } from "rxjs/internal/lastValueFrom";

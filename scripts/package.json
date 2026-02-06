@@ -1,0 +1,16 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "ens-contenthash.js",
+  "scripts": {
+    "ens-contenthash": "node ens-contenthash.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ensdomains/content-hash": "^3.0.0"
+  }
+}
