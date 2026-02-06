@@ -2,6 +2,9 @@
 
 Work in progress for the ETHGlobal HackMoney 2026 hackathon.
 
+See https://potatoes.marcelj.eth.link/ for info and live demo
+
+
 ## Notes
 
 * [ic-pub-key](https://github.com/dfinity/ic-pub-key) currently does not work in a browser.

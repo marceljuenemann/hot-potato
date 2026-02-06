@@ -5,7 +5,6 @@
       <p class="fs-4">
         Hot Potatoes are NFTs with an integrated wallet that can only be controlled by its current owner.
         Turn your cross-chain portfolio into a tradable and programmable asset.
-
       </p>
       <div style="width: 200px" class="mx-auto">
         <potato-icon></potato-icon>
@@ -17,7 +16,43 @@
   </div>
 </div>
 
+<div class="mt-4 py-5">
+  <img src="/marketing.svg" class="img-fluid mb-4" style="max-width: 100%;" alt="Hot Potato Marketing Image">
+</div>
 
-<div>
-  <img src="/marketing.png" class="img-fluid mb-4" style="max-width: 100%;" alt="Hot Potato Marketing Image">
+<div class="p-5 mb-4 bg-body-tertiary rounded-3 text-center">
+  <div class="mt-4 mb-4" style="max-width: 700px; margin-left: auto; margin-right: auto;">
+    <h2 class="fw-bold">Secured with Threshold ECDSA</h2>
+
+    <div>
+      <img src="/architecture.svg" class="img-fluid my-4" alt="Hot Potato Architecture">
+    </div>
+
+    <div class="alert alert-warning text-start">
+      <b>Warning:</b> Hot Potatoes are still
+      in early alpha and the bridge contract is still upgradable. Only use it for
+      testing and development purposes and at your own risk.
+    </div>
+    <ul class="text-start">
+      <li>
+        All signatures are authorized on an EVM blockchain (currently Arbitrum). If an unauthorized transaction is
+        made, there will be a cryptographically verifiable fraud proof.
+      </li>
+      <li>
+        There are no central private keys. Signatures are created using the Internet Computer's <a href="https://docs.internetcomputer.org/building-apps/network-features/signatures/t-ecdsa">Threshold ECDSA</a> technology.
+        The Internet Computer is a network of small blockchains run by <a href="https://dashboard.internetcomputer.org/network/subnets/pzp6e-ekpqk-3c5x7-2h6so-njoeq-mt45d-h3h6c-q3mxf-vpeq5-fk5o7-yae">vetted companies</a> (13 nodes for regular subnets, 34 nodes for the fiduciary subnet).
+      </li>
+      <li>
+        For a faster user experience,
+        the current version trusts the Arbitrum sequencer to be honest instead of waiting for L1 finality (7 days)
+        or even L1 confirmation.
+      </li>
+      <li>
+        The current version verifies EVM state via well-known RPC providers (e.g. Alchemy).
+        Future versions might use cryptographic proof, e.g. by running a light client of the
+        beacon chain on the Internet Computer.
+      </li>
+    </ul>
+
+  </div>
 </div>
