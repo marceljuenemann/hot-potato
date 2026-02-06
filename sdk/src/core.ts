@@ -1,5 +1,7 @@
-import { Contract, getDefaultProvider, Provider } from "ethers";
+import { Contract, getDefaultProvider, Provider, Signer } from "ethers";
 import POTATO_ABI from "./abi/potato.abi.json";
+import { TransactionResponse } from "ethers";
+import { Interface } from "ethers";
 
 /**
  * Potatoes are cheap and nutritious. They provide all the configuration
@@ -46,4 +48,28 @@ export async function getOwner(potato: Potato, provider?: Provider): Promise<str
   const rpcProvider = provider ?? getDefaultProvider(potato.defaultRpcProviderUrl);
   const contract = new Contract(potato.contractAddress, POTATO_ABI, rpcProvider);
   return contract['ownerOf'](potato.tokenId);
+}
+
+// TODO: This is an ugly API, can't require a Potato instance here. Maybe need a
+// PotatoKind class?
+export async function mint(contractAddress: string, signer: Signer): Promise<bigint | null> {
+  const iface = new Interface(POTATO_ABI);
+  const contract = new Contract(contractAddress, iface, signer);
+  const tx: TransactionResponse = await contract['mint']();
+  const receipt = await tx.wait();
+  if (!receipt) return null;
+
+  const topic = iface.getEvent("Minted")!.topicHash; 
+  const events = receipt.logs
+    .filter(log => log.address.toLowerCase() === contractAddress.toLowerCase())
+    .filter(log => log.topics?.[0] === topic)
+    .map(log => iface.parseLog(log))
+    .filter(event => event !== null)
+    .map(event => ({
+      tokenId: event.args.tokenId
+    }));
+  if (events.length === 0) {
+    return null;
+  }
+  return events[0].tokenId;
 }

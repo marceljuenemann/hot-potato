@@ -7,6 +7,7 @@ import { Authorization, authorizeSignature, fetchAuthorization, fetchSignature, 
 import { TransactionForm } from '../transaction-form/transaction-form';
 import { Transaction } from 'ethers';
 import { AlchemyProvider } from 'ethers';
+import { browserProviderForChain } from '../walletkit/browser';
 
 type TriState<T> = {
   progress?: string;
@@ -47,7 +48,7 @@ export class Request {
     const hash = this.requestedHash();
     if (!hash) return;
     const potato = this.request().potato;
-    const provider = await this.providerForChain(potato.chainId);
+    const provider = await browserProviderForChain(potato.chainId);
     const signer = await provider.getSigner();
     const transaction = await authorizeSignature(potato, hash, signer);
     this.fetchAuthorization(potato, hash, transaction);
@@ -109,23 +110,5 @@ export class Request {
     } catch (e) {
       this.broadcast.set({ error: String(e) })
     }
-  }
-
-  /**
-   * Simple MetaMask provider.
-   *
-   * TODO: Support other wallets.
-   */
-  async providerForChain(chainId: bigint): Promise<BrowserProvider> {
-    if ((window as any).ethereum == null) throw new Error("MetaMask not installed");
-    const provider = new BrowserProvider((window as any).ethereum);
-    await provider.send('wallet_switchEthereumChain', [{
-      chainId: '0x' + chainId.toString(16)
-    }]);
-    const network = await provider.getNetwork();
-    if (network.chainId !== chainId) {
-      throw new Error(`Connected to wrong network: ${network.chainId}, expected ${chainId}`);
-    }
-    return provider;
   }
 }

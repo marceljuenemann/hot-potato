@@ -1,7 +1,5 @@
-import { getBytes, toBeArray } from "ethers/utils";
-import { Potato } from "./core";
-import { concat } from "ethers";
-import { BigNumberish, getBigInt } from "ethers";
+import { BigNumberish, getBigInt, concat, Signer, getBytes, toBeArray } from "ethers";
+import { mint, Potato } from "./core";
 
 export function hotPotato(tokenId: BigNumberish): HotPotato {
   return new HotPotato(getBigInt(tokenId));
@@ -30,5 +28,11 @@ export class HotPotato extends Potato {
       ])),
       toBeArray(this.tokenId, 32)         // 32 bytes token ID
     ];
+  }
+
+  static mint(signer: Signer): Promise<HotPotato | null> {
+    return mint(new HotPotato(0n).contractAddress, signer).then(tokenId => {
+      return tokenId ? new HotPotato(tokenId) : null;
+    });
   }
 }
