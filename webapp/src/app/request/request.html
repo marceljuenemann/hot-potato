@@ -32,7 +32,8 @@
           contract as follows:
         </p>
         <div class="alert alert-secondary mt-2" style="padding-bottom: 0">
-          <pre>authorizeSignature({{ request().potato.tokenId }}, {{ requestedHash() || "(Invalid transaction)" }})</pre>
+          <!-- TODO: Rename to authorizeSignature() -->
+          <pre>signHash({{ request().potato.tokenId }}, {{ requestedHash() || "(Invalid transaction)" }})</pre>
         </div>
 
         <div class="btn-group" ngbDropdown placement="bottom-end">
