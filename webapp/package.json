@@ -31,6 +31,7 @@
     "@ng-bootstrap/ng-bootstrap": "^19.0.1",
     "@popperjs/core": "^2.11.8",
     "@reown/walletkit": "^1.5.0",
+    "@uniswap/uniswapx-sdk": "^2.0.1-alpha.10",
     "@walletconnect/core": "^2.23.4",
     "@walletconnect/utils": "^2.23.4",
     "bootstrap": "^5.3.6",
